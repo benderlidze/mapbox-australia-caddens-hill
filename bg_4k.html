@@ -1,0 +1,3040 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Display a satellite map on a webpage</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.2.0/wNumb.min.js"
+        integrity="sha512-igVQ7hyQVijOUlfg3OmcTZLwYJIBXU63xL9RC12xBHNpmGJAktDnzl9Iw0J4yrSaQtDxTTVlwhY730vphoVqJQ=="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.min.js"
+        integrity="sha512-EnXkkBUGl2gBm/EIZEgwWpQNavsnBbeMtjklwAa7jLj60mJk932aqzXFmdPKCG6ge/i8iOCK0Uwl1Qp+S0zowg=="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/14.6.3/nouislider.css"
+        integrity="sha512-XXtRBFtk/QfR8GEWwQPYjrQBHQwjidXg0wo8HJi9YOaFycWqd2uWkjJoAyx8Mb/+H8uhvmf70EAIxDnQxrwrvw=="
+        crossorigin="anonymous" />
+    <script src="js/qrcode.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        #amenities {}
+
+        .mapboxgl-ctrl-zoom-out {
+            display: none !important;
+        }
+
+        .mapboxgl-ctrl-zoom-in {
+            display: none !important;
+        }
+
+
+        .am {
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-left: 10px;
+        }
+
+        .custom {
+            margin-left: 20px;
+            ;
+        }
+
+        #info {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            z-index: 10000;
+            display: none;
+            background-color: aliceblue;
+            padding: 10px;
+        }
+
+        #mainSearchPanel {
+            position: fixed;
+            background-color: #323232;
+            bottom: 0px;
+            left: 0px;
+            z-index: 10000;
+            background-color: #323232;
+            width: 100%;
+            height: 200px;
+            box-sizing: border-box;
+        }
+
+        #searchPanelTop {
+            position: fixed;
+            /* bottom: 0px; */
+            left: 0px;
+            z-index: 100;
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            transition: 0.3s;
+
+            display: flex;
+            align-items: center;
+        }
+
+        #searchPanel {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            z-index: 100;
+            width: 100%;
+            height: 0px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        #searchPanelMore {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+            z-index: 100;
+            width: 100%;
+            height: 0px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+
+        #searchPanelTier1,
+        #searchPanelTier2,
+        #searchPanelTier3 {
+            position: fixed;
+            /* bottom: -250px; */
+            left: 0px;
+            z-index: 100;
+            width: 100%;
+            /* height: 100px; */
+            box-sizing: border-box;
+            transition: 0.3s;
+            /* border: 4px solid blue; */
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        #searchLandMore {
+            position: fixed;
+            left: 0px;
+            z-index: 100;
+            width: 100%;
+            height: 100px;
+            box-sizing: border-box;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: row;
+        }
+
+        /*
+        .noUi-origin {
+            will-change: transform;
+            position: absolute;
+            z-index: 1;
+            top: -5px;
+            right: 0;
+        }
+
+        .noUi-target {
+            height: 13px;
+            background: #FAFAFA;
+            border-radius: 104px;
+            border: 1px solid #D3D3D3;
+            box-shadow: inset 0 1px 1px #F0F0F0, 0 3px 6px -5px #BBB;
+        }
+
+        .noUi-horizontal .noUi-handle {
+            width: 35px;
+            height: 35px;
+            background: #D55A33;
+            border-radius: 60px;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            outline: none;
+            border: 3px solid white;
+        }
+
+        .noUi-horizontal .noUi-handle:before,
+        .noUi-horizontal .noUi-handle:after {
+            content: '';
+            background: transparent;
+        }
+
+        .noUi-connect {
+            background: #D55A33;
+            height: 22px;
+        }
+
+        .noUi-tooltip {
+            border: 0px !important;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            background: none;
+        }
+        */
+
+        .noUi-origin {
+            will-change: transform;
+            position: absolute;
+            z-index: 1;
+            top: -13px;
+            right: 0;
+        }
+
+        .noUi-target {
+            height: 22px;
+            background: #FAFAFA;
+            border-radius: 104px;
+            border: 1px solid #D3D3D3;
+            box-shadow: inset 0 1px 1px #F0F0F0, 0 3px 6px -5px #BBB;
+        }
+
+        .noUi-horizontal .noUi-handle {
+            width: 58px;
+            height: 58px;
+            background: #D55A33;
+            border-radius: 60px;
+            border: none;
+            box-shadow: none;
+            cursor: pointer;
+            outline: none;
+            border: 5px solid white;
+        }
+
+        .noUi-horizontal .noUi-handle:before,
+        .noUi-horizontal .noUi-handle:after {
+            content: '';
+            background: transparent;
+        }
+
+        .noUi-connect {
+            background: #D55A33;
+            height: 22px;
+        }
+
+        .noUi-tooltip {
+            border: 0px !important;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            background: none;
+        }
+
+        .button-container {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+
+        .button {
+            background-color: white;
+            border: 1px solid black;
+            color: black;
+            text-align: center;
+            text-decoration: none;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-transform: uppercase;
+            font-size: 0.55em;
+            user-select: none;
+        }
+
+        .button>.big {
+            font-size: 1.75em;
+        }
+
+        .selected {
+            background-color: black;
+            color: #0C6CDE;
+        }
+
+        .sliderdiv {
+            align-self: center;
+            justify-self: center;
+            width: 450px;
+        }
+
+        #roundtab {
+            /* background-color: white; */
+            border-top-right-radius: 150px;
+            border-bottom-right-radius: 150px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 800px;
+            height: 80px;
+            margin-top: 10px;
+            padding: 5px;
+            padding-left: 50px;
+            box-sizing: border-box;
+        }
+
+        #filtersDiv {
+            position: absolute;
+        }
+
+        .button-container:nth-child(4) {
+            padding-left: 20px;
+        }
+
+        .search-icon {
+            width: 100px;
+            height: 100px;
+        }
+
+        .small-icon {
+            width: 40px;
+            height: 40px;
+        }
+
+        .search-bar {
+            background-image: url('img/search-bar-right.png');
+            background-repeat: no-repeat;
+            background-position: center right;
+            /* background-position: calc(100% + 200px) center; */
+            background-size: 1111px 200px;
+            padding: 0px;
+            margin: 0px;
+            border: 0px solid #0C6CDE;
+            height: 100px;
+        }
+
+        .action {
+            cursor: pointer;
+        }
+
+        .sidepanel {
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: white;
+            overflow-x: hidden;
+            transition: 0.5s;
+            display: flex;
+            justify-content: center;
+            color: black;
+        }
+
+        .lotLandOnly {
+            background-color: #55BB88;
+            color: white;
+            height: 100%;
+            width: 450px;
+        }
+
+        .lotLandOnly .lotItem {
+            text-transform: none;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        #sidePanelContent {
+            box-sizing: border-box;
+            /* padding: 0px 15px; */
+        }
+
+        #sidePanelContent h2 {
+            /* color: #D86C47 */
+            margin: 0px;
+        }
+
+        .dot {
+            height: 25px;
+            width: 25px !important;
+            border-radius: 50%;
+            display: inline-block;
+            border: 1px solid white;
+            margin-left: 20px;
+        }
+
+        .sold {
+            background-color: red;
+        }
+
+        .available {
+            background-color: green;
+        }
+
+
+        .sidepanel a {
+            padding: 8px 8px 8px 32px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidepanel a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidepanel .closebtn {
+            display: flex;
+            position: absolute;
+            bottom: 220px;
+            font-size: 36px;
+            border: 3px solid black;
+            border-radius: 100%;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            color: white;
+            background-color: black;
+        }
+
+        .closebtn:hover {
+            background-color: #202020;
+        }
+
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #111;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+        }
+
+        .openbtn:hover {
+            background-color: #444;
+        }
+
+        .lotItem {
+            padding: 5px;
+            font-size: 1em;
+            text-transform: uppercase;
+
+            display: flex;
+            align-content: center;
+            align-items: center;
+        }
+
+        .lotItem.title {
+            font-size: 0.9em;
+            justify-content: flex-end;
+        }
+
+        .lotItem>span {
+            color: #D86C47;
+            display: inline-block;
+            width: 200px;
+        }
+
+        .buttonSearch {
+            width: 150px;
+            height: 150px;
+        }
+
+        .sliderClass {
+            width: 612px;
+        }
+
+        .hiddenPanel {
+            bottom: -250px;
+        }
+
+        .bottom50 {
+            bottom: 50px
+        }
+
+        #zoomButtons {
+            display: flex;
+            position: absolute;
+            right: 530px;
+            justify-content: space-between;
+            align-items: center;
+            height: 200px;
+        }
+
+        .order1 {
+            order: 1;
+        }
+
+        .order3 {
+            order: 3;
+        }
+
+        .order4 {
+            order: 4;
+        }
+
+        .searchTier1 {
+            width: 100px;
+            height: 100px;
+        }
+
+        .returnButton {
+            width: 100px;
+            height: 100px;
+        }
+
+        .moreAndClearButtons {
+            width: 100px;
+            height: 100px;
+        }
+
+        .sliderMin {
+            left: -45px;
+        }
+
+        .am_titles {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            align-content: center;
+            padding: 10px 0px;
+        }
+
+        .am_titles>img {
+            width: 85px;
+            height: 85px;
+            /* border: 2px solid;
+            border-radius: 50%; */
+        }
+
+        .inlineRow {
+            display: flex;
+            align-items: center;
+            align-content: center;
+            justify-content: space-between;
+        }
+
+        .lotItem>img {
+            width: 50px;
+        }
+
+        .houseDescr>div:nth-child(1),
+        .houseDescr>div:nth-child(4) {
+            margin-top: 10px;
+        }
+
+        #qrcode {
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @media screen and (max-width: 1920px) {
+            .search-bar {
+                background-size: 500px 100px;
+            }
+
+            #zoomButtons {
+                height: 100px;
+                right: 180px;
+            }
+
+            #mainSearchPanel {
+                height: 100px;
+            }
+
+            .am {
+                width: 75px;
+                height: 75px;
+                margin-right: 5px;
+                margin-left: 5px;
+            }
+
+            #searchPanelTop,
+            #searchPanelTier1,
+            #searchPanelTier2,
+            #searchPanelTier3 {
+                height: 100px;
+            }
+
+            .buttonSearch {
+                width: 75px;
+                height: 75px;
+            }
+
+            .sliderClass {
+                width: 200px;
+            }
+
+            .noUi-target {
+                height: 10px;
+            }
+
+            .noUi-horizontal .noUi-handle {
+                width: 28px;
+                height: 28px;
+                border: 2px solid white;
+                top: 3px;
+            }
+
+            .noUi-tooltip {
+                padding: 0px;
+                font-size: 14px;
+            }
+
+            .noUi-horizontal .noUi-origin>.noUi-tooltip {
+                bottom: 0px;
+            }
+
+            .bottom50 {
+                bottom: 0px
+            }
+
+            .searchTier1 {
+                width: 85px;
+                height: 85px;
+            }
+
+            .returnButton {
+                width: 50px;
+                height: 50px;
+            }
+
+            .moreAndClearButtons {
+                width: 85px;
+                height: 85px;
+            }
+
+            .sliderMin {
+                left: -20px;
+            }
+
+            .sidepanel .closebtn {
+                bottom: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="mySidepanel" class="sidepanel">
+        <div class="closebtn" onclick="closeSidePannel()">×</div>
+        <div id="sidePanelContent"></div>
+    </div>
+
+    <div id="map"></div>
+    <div id="info"></div>
+
+    <div id="mainSearchPanel" class="search-bar">
+
+        <div id="zoomButtons">
+
+            <div style="order:2;padding-left: 10px;"> ZOOM </div>
+
+        </div>
+
+        <div id="searchPanelTop" class="hiddenPanel bottom50">
+
+            <div id="amenities" style="display: inline;"></div>
+            <div id="searchPanelButtons" style="display: inline;margin-left:50px;"></div>
+
+        </div>
+        <div id="searchPanelMore">
+            <div style="position: absolute; top:50px; left:650px;">
+                <div style="position:absolute;top:-20px;left:-120px;color:white">
+                    LOT SIZE
+                </div>
+                <div style="position:absolute;top:-3px;left:-60px;color:white">
+                    MIN
+                </div>
+                <div style="position:absolute;top:-3px;right:-60px;color:white">
+                    MAX
+                </div>
+                <div class="sliderdiv">
+                    <div id="size_slider"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="searchLandMore" class="hiddenPanel"></div>
+        <div id="searchPanelTier1" class="hiddenPanel"></div>
+        <div id="searchPanelTier2" class="hiddenPanel"></div>
+        <div id="searchPanelTier3" class="hiddenPanel"></div>
+
+        <div id="searchPanel">
+            <div style="position: absolute; top:50px; left:650px;">
+                <div style="position:absolute;top:-20px;left:-120px;color:white">
+                    $PRICE
+                </div>
+                <div style="position:absolute;top:-3px;left:-60px;color:white">
+                    MIN
+                </div>
+                <div style="position:absolute;top:-3px;right:-60px;color:white">
+                    MAX
+                </div>
+                <div class="sliderdiv">
+                    <div id="price_slider"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // const resolutionParams = () => {
+        //     const resolution = {
+        //         "4k": {
+        //             amenitiesButtons: {
+        //                 width: 150,
+        //                 height: 150
+        //             },
+        //             searchPanelTop: {
+        //                 height: 200
+        //             }
+        //         },
+        //         "fullHD": {
+        //             amenitiesButtons: {
+        //                 width: 75,
+        //                 height: 75
+        //             },
+        //             searchPanelTop: {
+        //                 height: 100
+        //             },
+        //             mainSearchPanel: {
+
+        //             }
+        //         }
+        //     }
+        //     if (window.innerWidth <= 1920) {
+        //         return resolution['fullHD']
+        //     }
+        //     return resolution["4k"]
+        // }
+        // const res = resolutionParams();
+
+
+        const zoomButtons = document.getElementById("zoomButtons");
+        const filtersDiv = document.getElementById("filtersDiv");
+        const infoDiv = document.getElementById("info");
+        const amenitiesDiv = document.getElementById("amenities");
+        const sidePanelContent = document.getElementById("sidePanelContent");
+
+
+        const searchLandMore = document.getElementById('searchLandMore');
+        const searchPanelTier1 = document.getElementById('searchPanelTier1');
+        const searchPanelTier2 = document.getElementById('searchPanelTier2');
+        const searchPanelTier3 = document.getElementById('searchPanelTier3');
+
+        const resetAllSliders = [];
+        // const releasePopups = [];
+
+        const activeAmenities = [];
+        const mainData = {};
+        const fetchOptions = {
+            cache: "force-cache"
+        }
+        const buttonsArray = [];
+        const filters = {
+            Lot_Price: {
+                min: 0,
+                max: 0
+            },
+            Lot_Home_Size: {
+                min: 0,
+                max: 0
+            },
+            Lot_SQM: {
+                min: 0,
+                max: 0
+            },
+            Lot_Width: {
+                min: 0,
+                max: 0
+            },
+            Lot_Depth: {
+                min: 0,
+                max: 0
+            },
+            room: [],
+            storey: [],
+            available: [],
+            garage: [],
+            builders: []
+        }
+
+        const urlProps = {};
+        mapboxgl.accessToken = 'pk.eyJ1Ijoic2Vyc2Vyc2VyIiwiYSI6ImNrZnBpaWF5azBpMWMyeHBmdzJpdno1NzgifQ.4vBDF2DNuk-beXljllf3Yg';
+        var map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/mapbox/streets-v11', // style URL
+            center: { lng: 150.85683146925305, lat: -33.79963748174913 },
+            zoom: 11 // starting zoom
+        });
+        map.addControl(new mapboxgl.NavigationControl());
+
+        var releasesSatetId = null;
+        var hoveredStateId = null;
+        var clickedStateId = null;
+
+        var popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+        });
+
+
+        function updateLotsGeometry(clearFilter) {
+
+            console.log('skipPriceFilter', JSON.stringify(filters));
+            if (!mainData || !mainData.lots) return;
+
+            const pins = [];
+
+            //reset hilighting 
+            mainData.lots.forEach(i => {
+                map.setFeatureState(
+                    { source: 'lots', id: i.Lot_Number },
+                    { active: false }
+                );
+            })
+
+            //AFTER CLEAR ALL, do not apply any other filters, just clear the data. for CLEAR FILTER BUTTON 
+            if (
+                filters.garage.length === 0 &&
+                filters.room.length === 0 &&
+                filters.storey.length === 0 &&
+                filters.available.length === 0 &&
+                filters.Lot_Depth.min === 0 &&
+                filters.Lot_Home_Size.min === 0 &&
+                filters.Lot_Price.min === 0 &&
+                filters.Lot_SQM.min === 0 &&
+                filters.Lot_Width.min === 0
+            ) {
+                console.log('CLEAR ALL, do not apply any other filters');
+                return;
+            }
+
+            if (clearFilter === "clearFilter") {
+
+                console.log('clearFilter!!!',);
+                mainData.lots.map(i => {
+                    map.setFeatureState(
+                        { source: 'lots', id: i.Lot_Number },
+                        { active: true }
+                    );
+
+                });
+                return;
+
+            }
+
+            mainData.lots
+                .filter(i => i.Lot_Polygon_Data !== "")
+                .filter(i => {
+                    if (filters.room && filters.room.length > 0) {
+                        if (filters.room.includes(i['Lot_Bedrooms'])) {
+                            return i
+                        }
+                    } else {
+                        return i
+                    }
+                })
+                .filter(i => {
+                    if (filters.garage && filters.garage.length > 0) {
+                        if (filters.garage.includes(i['Lot_CarSpaces'])) {
+                            return i
+                        }
+                    } else {
+                        return i
+                    }
+                })
+                .filter(i => {
+                    if (filters.storey && filters.storey.length > 0) {
+                        if (filters.storey.includes(i['Lot_Storeys'])) {
+                            return i
+                        }
+                    } else {
+                        return i
+                    }
+                })
+                .filter(i => {
+                    if (filters.available && filters.available.length > 0) {
+                        const lotStatus = i['Lot_Status'].toLowerCase()
+                        if (filters.available.includes(lotStatus)) {
+                            return i
+                        }
+                    } else {
+                        return i
+                    }
+                })
+                .filter(i => {
+                    if (filters.builders && filters.builders.length > 0) {
+                        const Lot_Builder_ID = +i['Lot_Builder_ID']
+                        if (filters.builders.includes(Lot_Builder_ID)) {
+                            return i
+                        }
+                    } else {
+                        return i
+                    }
+                })
+                .filter(i => minMax("Lot_Home_Size", i))
+                .filter(i => minMax("Lot_Width", i))
+                .filter(i => minMax("Lot_Price", i))
+                .filter(i => minMax("Lot_Depth", i))
+                .filter(i => minMax("Lot_SQM", i))
+                .map(i => {
+
+                    const lot = JSON.parse(i.Lot_Polygon_Data);
+                    lot.properties.color = i['Lot_Indicator_Colour'];
+                    lot.properties.webHook = i['Lot_Webhook'];
+                    lot.properties.id = i['Lot_Number'];
+                    lot.properties.price = i['Lot_Price'];
+                    lot.id = i.Lot_Number
+
+                    map.setFeatureState(
+                        { source: 'lots', id: i.Lot_Number },
+                        { active: true }
+                    );
+
+                    const pinLatlng = [+i.Lot_Longitude, +i.Lot_Latitude];
+                    pins.push({
+                        "type": "Feature",
+                        "properties": {},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": pinLatlng
+                        },
+                        properties: {
+                            color: i['Lot_Indicator_Colour'],
+                        }
+                    })
+
+                    return lot
+                })
+
+
+
+        }
+
+        function minMax(FILTER_PROP, i) {
+            if (filters && filters[FILTER_PROP] && filters[FILTER_PROP].max > 0) {
+                const { min, max } = filters[FILTER_PROP]
+                const lotValue = +i[FILTER_PROP]
+                if (lotValue >= +min && lotValue <= +max) {
+                    return true
+                }
+            } else {
+                return true
+            }
+        }
+
+        function addremoveFromArray(array, value) {
+            const index = array.indexOf(value)
+            if (index === -1) { //not found, add
+                array.push(value)
+            } else { //already exists, remove
+                array.splice(index, 1)
+            }
+        }
+
+        getUrlParams();
+        document.addEventListener("click", e => {
+
+            if (e.target.classList.contains("am")) {
+                console.log('amenity category clicked');
+                let unselect = false;
+                const amId = +e.target.getAttribute("am_id")
+                const index = activeAmenities.indexOf(amId);
+                let clickedIndex;
+                if (index > -1) {
+                    activeAmenities.splice(index, 1);
+                    unselect = true
+                } else {
+                    activeAmenities.push(amId)
+                }
+                console.log('amId', amId);
+                const am = mainData.amenities.find(i => +i['Amenity_Cat_ID'] === +amId)
+                if (am) {
+                    const center = [+am['Amenity_Cat_Longitude'], +am['Amenity_Cat_Latitude']]
+                    const zoom = [am['Amenity_Cat_Zoom']]
+
+                    if (!unselect) {
+
+                        webHook(am['Amenity_Cat_Webhook'])
+                        map.flyTo({
+                            center,
+                            zoom
+                        })
+                    }
+                }
+
+                updateAmenities();
+                updateAmenitiesDiv()
+            }
+        })
+
+        // document.addEventListener("mousedown", e => {
+        //     console.log('123', 123);
+        //     if (e.target.classList.contains("am")) {
+
+        //     }
+        // })
+
+        function pannelShow(panel) {
+            const panels = [
+                "searchPanelTop",
+                "searchPanel",
+                "searchPanelMore",
+                "searchLandMore",
+                "searchPanelTier1",
+                "searchPanelTier2",
+                "searchPanelTier3",
+            ]
+            console.log('pannelShow', panel);
+
+            //hide all pannels !!!
+            panels.forEach(i => {
+                //document.getElementById(i).style.bottom = "-250px";
+                document.getElementById(i).classList.add("hiddenPanel");
+                document.getElementById(i).classList.remove("bottom50");
+            })
+
+            /*
+            if (panel === "searchPanelTop") {
+                document.getElementById(panel).style.bottom = "0px";
+            } else {
+                document.getElementById(panel).classList.add("bottom50")
+            }
+
+            // if (panel === "searchPanelTier1") {
+            //     document.getElementById(panel).style.bottom = "0px";
+            // }
+
+
+            if (panel === "searchPanelTier2") {
+                //document.getElementById(panel).style.bottom = "25px";
+            }
+            */
+
+            document.getElementById(panel).classList.add("bottom50")
+        }
+
+        function createButton({
+            layerId,
+            positionType,
+            position,
+            imgSize,
+            callbackAction,
+            imgSrc,
+            imgMouseDown,
+            imgHover,
+            className,
+            action,
+            buttonType,
+            customStyle
+        }) {
+
+            let currentState = false;
+            const { top, right, left } = position;
+            var div = document.createElement('div');
+            div.className = className || "custom";
+
+            if (positionType) {
+                //position relative
+                div.style.display = positionType
+            } else {
+                div.style.position = "absolute";
+                div.style.top = top + "px";
+                if (right) {
+                    div.style.right = right + "px";
+                }
+                if (left) {
+                    div.style.left = left + "px";
+                }
+
+            }
+            div.style.zIndex = 1000;
+
+            if (customStyle) {
+                div.style.cssText = customStyle;
+            }
+
+            var imgOff = document.createElement('img');
+            imgOff.setAttribute("class", className);
+            imgOff.src = imgMouseDown;
+            // imgOff.style.width = imgSize.width + "px"
+            // imgOff.style.height = imgSize.height + "px"
+            imgOff.style.display = "none";
+            imgOff.onmouseup = changeImage;
+            div.appendChild(imgOff)
+
+
+            var img = document.createElement('img');
+            img.setAttribute("src", imgSrc);
+            img.setAttribute("class", className);
+            img.setAttribute("action", action);
+            //img.style.width = imgSize.width + "px"
+            //img.style.height = imgSize.height + "px"
+
+            img.onmousedown = function (e) {
+                img.style.display = "none"
+                imgOff.style.display = "";
+            }
+            img.onmouseup = changeImage;
+            div.appendChild(img)
+            document.getElementById(layerId).appendChild(div)
+
+
+            function reset() {//set initial values;
+
+                currentState = false;
+                //img.setAttribute("src", imgSrc);
+                img.style.display = "";
+                imgOff.style.display = "none";
+            }
+
+            function changeImage(e) {
+                console.log('currentState', currentState);
+                if (buttonType && buttonType === "toggle") {
+                    if (!currentState) {
+                        // img.setAttribute("src", imgOff.src);
+                        img.style.display = "none"
+                        imgOff.style.display = "";
+                    } else {
+                        // img.setAttribute("src", img.src);
+                        imgOff.style.display = "none";
+                        img.style.display = ""
+                    }
+                    currentState = !currentState
+                } else {
+                    img.style.display = "";
+                    imgOff.style.display = "none";
+                }
+
+                callbackAction();
+            }
+
+            const button = {
+                img,
+                reset: reset
+            }
+
+            buttonsArray.push(button);
+
+            return {
+                img,
+                reset: reset
+            };
+        }
+
+        //==================================================BUTTONS======================================================
+        //==================================================BUTTONS======================================================
+        //==================================================BUTTONS======================================================
+
+        const buttonsControls = [
+            {
+                layerId: "zoomButtons",
+                positionType: "flex",
+                position: { top: 50, right: 950 },
+                imgSize: { width: 100, height: 100 },
+                callbackAction: function () {
+                    map.flyTo({
+                        zoom: map.getZoom() + 1
+                    })
+                },
+                imgSrc: 'img/zoomin.png',
+                imgMouseDown: "img/zoomin_active.png",
+                imgHover: "",
+                className: " action order1 am",
+                action: ""
+            },
+
+            {
+                layerId: "zoomButtons",
+                positionType: "flex",
+                position: { top: 50, right: 750 },
+                imgSize: { width: 100, height: 100 },
+                callbackAction: function () {
+                    map.flyTo({
+                        zoom: map.getZoom() - 1
+                    })
+                },
+                imgSrc: 'img/zoomout.png',
+                imgMouseDown: "img/zoomout_active.png",
+                imgHover: "",
+                className: " action order3 am",
+                action: ""
+            },
+
+            { //RESET BUTTON
+                positionType: 'flex',
+                position: { top: 10, left: 70 },
+                imgSize: { width: 150, height: 150 },
+                layerId: "zoomButtons",
+                callbackAction: function () {
+                    clearFilters()
+                    updateLotsGeometry("clearFilter")
+                },
+                imgSrc: 'img/Reset button.png',
+                imgMouseDown: "img/Reset button_not active.png",
+                className: "action  order4 am",
+                action: "",
+            }
+
+
+        ].map(i => {
+            return createButton(i);
+        })
+
+
+        //==================================================BUTTONS======================================================
+        //==================================================BUTTONS======================================================
+        //==================================================BUTTONS======================================================
+
+        function clearFilters() {
+            console.log('clearFilters!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',);
+
+            //reset button
+            buttonsArray.forEach(button => {//reset buttons state
+                button.reset();
+            })
+
+            //reset ALL SLIDERS 
+            resetAllSliders.map(i => {
+                if (typeof i === 'function') i();
+            })
+
+            filters.Lot_Price = {
+                min: 0,
+                max: 0
+            }
+
+            filters.Lot_Home_Size = {
+                min: 0,
+                max: 0
+            }
+            filters.Lot_SQM = {
+                min: 0,
+                max: 0
+            }
+            filters.Lot_Width = {
+                min: 0,
+                max: 0
+            }
+            filters.Lot_Depth = {
+                min: 0,
+                max: 0
+            }
+
+            filters.room.length = 0
+            filters.storey.length = 0
+            filters.available.length = 0
+            filters.garage.length = 0
+            filters.builders.length = 0
+
+
+            console.log(filters)
+            console.log(JSON.stringify(filters))
+
+        }
+
+        function updateAmenitiesDiv() {
+
+            amenitiesDiv.innerHTML = "";
+
+            const am = Object.keys(mainData.amenitiesDiv)
+                .map(i => {
+
+                    if (!activeAmenities.includes(+i)) { // if not enabled set icon to OFF 
+                        // console.log('OFF');
+                        icon = mainData.amenitiesDiv[i].off
+                        img = mainData.amenitiesDiv[i].offimg
+                    } else {
+
+                        icon = mainData.amenitiesDiv[i].on
+                        img = mainData.amenitiesDiv[i].onimg
+                    }
+                    amenitiesDiv.appendChild(img);
+                })
+
+            console.log('activeAmenities', activeAmenities);
+            map.setFilter("amenitiesicon", ['in', ['get', 'amId'], ["literal", activeAmenities]]);
+        }
+
+        function updateAmenities(Amenity_ID) {
+
+            console.log('activeAmenities', activeAmenities);
+            console.log('Amenity_ID', Amenity_ID);
+
+            const amLilst = mainData.amenitiesList
+                .map(i => {
+                    const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
+                    let icon;
+
+                    let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
+                    amId = +amId.innerText;
+
+
+                    if (Amenity_ID && Amenity_ID === i.Amenity_ID) {
+                        icon = i['Amenity_Category_Name']
+                    } else {
+                        icon = i['Amenity_Category_Name'] + "_off"
+                    }
+                    return {
+                        "type": "Feature", "properties": {},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": latlng
+                        },
+                        properties: {
+                            ...i,
+                            icon: icon,
+                            amId: amId
+                        }
+                    };
+                })
+            const collection = {
+                "type": "FeatureCollection",
+                "features": amLilst
+            };
+            map.getSource("amenities").setData(collection)
+        }
+
+
+        map.on('load', async function () {
+
+            //ADMIN PARAMS
+            //await?
+            getObject('object_11').then(data => {
+                console.log('ADMIN PARAMS ', data);
+                mainData.admin = data[0]
+
+                if (mainData.admin['Project_Zoom_Level']) {
+                    console.log('!!!!!!!!!!!!!!!!!!!!');
+                    map.flyTo({
+                        center: [
+                            +mainData.admin['Project_Longitude'],
+                            +mainData.admin['Project_Latitude']
+                        ],
+                        zoom: +mainData.admin['Project_Zoom_Level']
+                    })
+
+                }
+
+                if (mainData.admin && mainData.admin['Lot_Boundary_MinZoom']) {
+                    const minZoom = +mainData.admin['Lot_Boundary_MinZoom'];
+                    const maxZoom = +mainData.admin['Lot Boundary_MaxZoom'];
+                    const lotsLayers = [
+                        'lots-fills',
+                        'lots-active',
+                        'lots-borders',
+                        'lots-pins',
+                    ].forEach(i => {
+                        map.setLayerZoomRange(i, minZoom, maxZoom);
+                    })
+                }
+
+                if (mainData.admin && mainData.admin['Lot_Boundary_MinZoom']) {
+                    //Release_Boundary_MaxZoom: "17.407400705603479"
+                    //Release_Boundary_MinZoom: "14.288423362730992"
+                    const minZoom = +mainData.admin['Release_Boundary_MinZoom'];
+                    const maxZoom = +mainData.admin['Release_Boundary_MaxZoom'];
+                    const lotsLayers = [
+                        'releases-fills',
+                        'releases-borders',
+                    ].forEach(i => {
+                        map.setLayerZoomRange(i, minZoom, maxZoom);
+                    })
+                }
+
+
+                //project_image
+                if (mainData.admin['Project_Label_Active'].toLowerCase() === "yes") {
+                    const projectImageCoords = [+mainData.admin['Project_Label_Longitude'], +mainData.admin['Project_Label_Latitude']]
+                    let projectImage = mainData.admin['Project_Label_Image'];
+                    projectImage = (new DOMParser()).parseFromString(projectImage, 'text/html').querySelector('img');
+                    projectImage = projectImage.src;
+                    map.loadImage(projectImage, function (error, image) {
+                        map.addImage('project_label', image);
+                    })
+                    const projectImageJSON = {
+                        "type": "Feature", "properties": {},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": projectImageCoords
+                        },
+                        'properties': {
+                            icon: 'project_label',
+                        }
+                    };
+                    const collection = {
+                        "type": "FeatureCollection",
+                        "features": [projectImageJSON]
+                    };
+                    console.log('collection', collection);
+                    map.getSource("project_image").setData(collection)
+                    map.setLayerZoomRange('project_image', +mainData.admin['Project_Label_MinZoom'], +mainData.admin['Project_Label_MaxZoom']);
+                }
+
+                map.setLayoutProperty("amenitiesicon", "icon-size", JSON.parse(mainData.admin.Amenity_External_Icon_Interpolate))
+                map.setLayoutProperty("amenitiesiconInternal", "icon-size", JSON.parse(mainData.admin.Amenity_Internal_Icon_Interpolate))
+
+
+
+                //=============================================
+                //================SEARCH BARS==================
+                //=============================================
+                if (mainData.admin['Search_Types']) {
+
+                    const searchTypes = mainData.admin['Search_Types'].split(",");
+                    searchTypes.map(i => {
+                        const bName = i.trim();
+                        console.log('----------->', bName);
+                        createButton({
+                            layerId: "searchPanelButtons",
+                            positionType: 'inline',
+                            position: { top: 10, right: 500 },
+                            padding: { left: 10 },
+                            imgSize: { width: 150, height: 150 },
+                            callbackAction: function () {
+                                //switch to search panel
+                                console.log('bName', bName);
+
+                                if (bName === 'Land Only') {
+                                    pannelShow("searchLandMore")
+                                }
+                                if (bName === 'House & Land') {
+                                    pannelShow("searchPanelTier1")
+                                }
+
+                                // if (bName === 'Land Only') {
+
+                                //     searchPanelTop.style.bottom = "-250px";
+                                //     searchPanel.style.bottom = "-250px";
+                                //     searchPanelMore.style.bottom = "-250px";
+
+                                //     searchPanelTier1.classList.add("hiddenPanel");
+                                //     searchLandMore.classList.add("bottom50");
+                                // }
+                                // if (bName === 'House & Land') {
+                                //     searchPanelTop.style.bottom = "-250px";
+                                //     searchPanel.style.bottom = "-250px";
+                                //     searchPanelMore.style.bottom = "-250px";
+
+                                //     searchLandMore.classList.remove("bottom50");
+                                //     searchPanelTier1.classList.add("bottom50")
+                                // }
+                            },
+                            imgSrc: `img/${bName}.png`,
+                            imgMouseDown: `img/${bName}.png`,
+                            imgHover: "",
+                            className: "search-icon action buttonSearch",
+                            action: ""
+                        })
+                    })
+
+
+                    //====Search land tier============
+                    if (mainData.admin['Search_Fields_LandOnly'] !== "") {
+                        const searchLand = mainData.admin['Search_Fields_LandOnly'].split(",").map(i => i.split("|")).sort((a, b) => +a[0] - (+b[0]))
+                        console.log('searchla', searchLand);
+
+                        searchLand.map(i => {
+                            const buttonImage = i[1];
+                            const buttonType = i[1];
+                            const price = i[1];
+                            const matches = buttonType.match(/\[(.*?)\]/);
+                            if (matches) {
+                                // console.log('submatch ', matches);
+                                // console.log('buttonType ', buttonType);
+                                const sliderId = buttonType.split("[")[0]
+                                // console.log('sliderId', sliderId);
+                                const submatch = matches[1];
+                                const [min, max, label, suffix] = submatch.split(";")
+                                buildSlider("searchLandMore", sliderId, +min, +max, label, suffix)
+                            }
+                        })
+                    }
+                    //back button 
+                    createButton({
+                        layerId: 'searchLandMore',
+                        positionType: 'flex',
+                        position: { top: 50, right: 500 },
+                        imgSize: { width: 85, height: 85, },
+                        padding: { left: 10 },
+                        callbackAction: function () {
+                            //switch to search panel
+                            pannelShow('searchPanelTop')
+                        },
+                        imgSrc: `img/return.png`,
+                        imgMouseDown: `img/return.png`,
+                        imgHover: `img/return.png`,
+                        className: "search-icon action returnButton",
+                        buttonType: "",
+                        customStyle: "align-self: center;margin-left:20px;"
+                    })
+                    //====Search land tier============
+
+
+                    const tiers = {
+                        tier1: mainData.admin['Search_Fields_HouseLand_T1'].split(",").map(i => i.split("|")).sort((a, b) => +a[0] - (+b[0])),
+                        tier2: mainData.admin['Search_Fields_HouseLand_T2'].split(",").map(i => i.split("|")).sort((a, b) => +a[0] - (+b[0])),
+                        tier3: mainData.admin['Search_Fields_HouseLand_T3'].split(",").map(i => i.split("|")).sort((a, b) => +a[0] - (+b[0])),
+                    }
+                    console.log('tiers---->', tiers);
+
+                    //=========================TIER1================================
+                    //=========================TIER1================================
+                    //=========================TIER1================================
+                    tiers.tier1.map(i => {
+                        const buttonImage = i[1];
+                        const buttonType = i[1];
+                        const price = i[1];
+                        if (buttonType === '3 Bedrooms') { roomsFilter("searchPanelTier1", 3, buttonImage) }
+                        if (buttonType === '4 Bedrooms') { roomsFilter("searchPanelTier1", 4, buttonImage) }
+                        if (buttonType === '5+ Bedrooms') { roomsFilter("searchPanelTier1", 5, buttonImage) }
+                        if (buttonType === '1 Car Space') { garageFilter("searchPanelTier1", 1, buttonImage) }
+                        if (buttonType === '2 Car Spaces') { garageFilter("searchPanelTier1", 2, buttonImage) }
+                        if (buttonType === 'Single Storey') { storeyFilter("searchPanelTier1", 1, buttonImage) }
+                        if (buttonType === 'Double Storey') { storeyFilter("searchPanelTier1", 2, buttonImage) }
+                        if (buttonType === 'All Homes') { allHomesFilter("searchPanelTier1", 2, buttonImage) }
+                        //SEARCH FOR SLIDER TYPES 
+                        const matches = buttonType.match(/\[(.*?)\]/);
+                        if (matches) {
+                            console.log('submatch', matches);
+                            const sliderId = buttonType.split("[")[0]
+                            const submatch = matches[1];
+                            const [min, max, label, suffix] = submatch.split(";")
+                            buildSlider("searchPanelTier1", sliderId, +min, +max, label, suffix)
+                        }
+                    })
+
+                    tiers.tier2.map(i => {
+                        const layer = "searchPanelTier2";
+                        const buttonImage = i[1];
+                        const buttonType = i[1];
+                        const price = i[1];
+                        if (buttonType === '3 Bedrooms') { roomsFilter(layer, 3, buttonImage) }
+                        if (buttonType === '4 Bedrooms') { roomsFilter(layer, 4, buttonImage) }
+                        if (buttonType === '5+ Bedrooms') { roomsFilter(layer, 5, buttonImage) }
+                        if (buttonType === '1 Car Space') { garageFilter(layer, 1, buttonImage) }
+                        if (buttonType === '2 Car Spaces') { garageFilter(layer, 2, buttonImage) }
+                        if (buttonType === 'Single Storey') { storeyFilter(layer, 1, buttonImage) }
+                        if (buttonType === 'Double Storey') { storeyFilter(layer, 2, buttonImage) }
+                        if (buttonType === 'All Homes') { allHomesFilter(layer, 2, buttonImage) }
+
+                        //SEARCH FOR SLIDER TYPES 
+                        console.log('buttonType', i, buttonType);
+
+                        const matches = buttonType.match(/\[(.*?)\]/);
+                        if (matches) {
+                            console.log('submatch', matches);
+                            const sliderId = buttonType.split("[")[0]
+                            const submatch = matches[1];
+                            const [min, max, label, suffix] = submatch.split(";")
+                            buildSlider(layer, sliderId, +min, +max, label, suffix)
+                        }
+                    })
+
+                    createButton({//BUILDERS 
+                        // buttonType: "toggle",
+                        positionType: 'flex',
+                        position: { top: 5, left: 1170 },
+                        imgSize: { width: 150, height: 150 },
+                        layerId: "searchPanelTier2",
+                        callbackAction: function () {
+                            pannelShow("searchPanelTier3")
+                        },
+                        imgSrc: 'img/builders.png',
+                        imgMouseDown: "img/builders.png",
+                        className: "search-icon action moreAndClearButtons",
+                        action: "",
+                    });
+
+                    createButton({//MORE 
+                        // buttonType: "toggle",
+                        positionType: 'flex',
+                        position: { top: 5, left: 1170 },
+                        imgSize: { width: 150, height: 150 },
+                        layerId: "searchPanelTier1",
+                        callbackAction: function () {
+                            pannelShow("searchPanelTier2")
+                        },
+                        imgSrc: 'img/more.png',
+                        imgMouseDown: "img/more_active.png",
+                        className: "search-icon action moreAndClearButtons",
+                        action: "",
+                    });
+
+                    createButton({
+                        layerId: 'searchPanelTier2',
+                        positionType: 'flex',
+                        position: { top: 50, right: 500 },
+                        imgSize: { width: 85, height: 85 },
+                        padding: { left: 10 },
+                        callbackAction: function () {
+                            //switch to search panel
+                            pannelShow('searchPanelTier1')
+                        },
+                        imgSrc: `img/return.png`,
+                        imgMouseDown: `img/return.png`,
+                        imgHover: `img/return.png`,
+                        className: "search-icon action returnButton",
+                        buttonType: "",
+                        customStyle: "align-self: center;margin-left:20px;"
+                    })
+
+                    createButton({
+                        layerId: 'searchPanelTier3',
+                        positionType: 'flex',
+                        position: { top: 50, right: 500 },
+                        imgSize: { width: 85, height: 85 },
+                        padding: { left: 10 },
+                        callbackAction: function () {
+                            //switch to search panel
+                            pannelShow('searchPanelTier2')
+                        },
+                        imgSrc: `img/return.png`,
+                        imgMouseDown: `img/return.png`,
+                        imgHover: `img/return.png`,
+                        className: "search-icon action returnButton",
+                        buttonType: "",
+                        customStyle: "align-self: center;margin-left:20px;"
+                    })
+
+                    createButton({ //CLEAR FILTERS BUTTON
+                        // buttonType: "toggle",
+                        positionType: 'flex',
+                        position: { top: 10, left: 70 },
+                        imgSize: { width: 150, height: 150 },
+                        layerId: "searchPanelTier1",
+                        callbackAction: function () {
+                            clearFilters()
+                            updateLotsGeometry("clearFilter")
+                        },
+                        imgSrc: 'img/clear_filter.png',
+                        imgMouseDown: "img/clear_filter_mousedown.png",
+                        className: "search-icon action moreAndClearButtons",
+                        action: "",
+                    })
+                    createButton({
+                        layerId: 'searchPanelTier1',
+                        positionType: 'flex',
+                        position: { top: 25, right: 500 },
+                        imgSize: { width: 85, height: 85 },
+                        padding: { left: 10 },
+                        callbackAction: function () {
+                            //switch to search panel
+                            pannelShow('searchPanelTop')
+                        },
+                        imgSrc: `img/return.png`,
+                        imgMouseDown: `img/return.png`,
+                        imgHover: `img/return.png`,
+                        className: "search-icon action returnButton",
+                        buttonType: "",
+                        customStyle: "align-self: center;margin-left:20px;",
+                        action: ""
+                    })
+                    //=========================TIER1================================
+                    //=========================TIER1================================
+                    //=========================TIER1================================
+
+
+
+                    function buildSlider(layerDiv, filterVarible, min, max, label, suffix) {
+                        console.log('buildSlider', layerDiv, filterVarible, min, max, label, suffix);
+
+                        const sliderId = `${new Date().getTime()}_${filterVarible}`;
+
+                        document.getElementById(layerDiv).insertAdjacentHTML('beforeend', `
+                        <div style="border:0px solid red; display:flex;margin: 0px 45px; justify-content: center;" class="sliderClass">
+                            <div style="position:absolute;bottom:5px;color:white">
+                                ${label}
+                            </div>
+                            <div class="sliderMin" style="position:relative; top:45%; color:white">
+                                MIN
+                            </div>
+                            <div class="sliderdiv">
+                                <div id="${sliderId}"></div>
+                            </div>
+                            <div style="position:relative; top:45%; right:-25px; color:white">
+                                MAX
+                            </div>
+                        </div>
+                        `);
+                        const slider = document.getElementById(sliderId);
+
+                        let tooltip;
+                        if (suffix && suffix !== "") {
+                            tooltip = { decimals: 0, thousand: ",", suffix }
+                        } else {
+                            tooltip = { decimals: 0, thousand: ",", prefix: "$" }
+                        }
+
+                        noUiSlider.create(slider, {
+                            start: [min, max],
+                            connect: true,
+                            tooltips: [wNumb(tooltip), wNumb(tooltip)],
+                            range: {
+                                'min': min,
+                                'max': max
+                            }
+                        });
+
+                        slider.noUiSlider.on('set.one', function (values) {
+                            filters[filterVarible].min = +values[0]
+                            filters[filterVarible].max = +values[1]
+                            updateLotsGeometry()
+                        });
+
+                        function resetSlider() {
+                            slider.noUiSlider.set([min, max])
+                        }
+
+                        resetAllSliders.push(resetSlider)
+                        mergeTooltips(slider, 35, ' - ', tooltip);
+                    }
+
+                    function allHomesFilter(divId, rooms, buttonImage) {
+                        createButton({
+                            layerId: divId,
+                            positionType: 'flex',
+                            position: { top: 10, right: 500 },
+                            imgSize: { width: 150, height: 150 },
+                            padding: { left: 10 },
+                            callbackAction: function () {
+                                //switch to search panel
+                                console.log('buttonImage', buttonImage);
+                                addremoveFromArray(filters.available, 'available')
+                                updateLotsGeometry()
+                            },
+                            imgSrc: `img/tiers/${buttonImage}.png`,
+                            imgMouseDown: `img/tiers/activated/${buttonImage}.png`,
+                            imgHover: `img/tiers/activated/${buttonImage}.png`,
+                            className: "search-icon action searchTier1",
+                            buttonType: "toggle",
+                        })
+                    }
+                    function storeyFilter(divId, rooms, buttonImage) {
+                        createButton({
+                            layerId: divId,
+                            positionType: 'flex',
+                            position: { top: 10, right: 500 },
+                            imgSize: { width: 150, height: 150 },
+                            padding: { left: 10 },
+                            callbackAction: function () {
+                                //switch to search panel
+                                console.log('buttonImage', buttonImage);
+                                addremoveFromArray(filters.storey, rooms)
+                                updateLotsGeometry()
+                            },
+                            imgSrc: `img/tiers/${buttonImage}.png`,
+                            imgMouseDown: `img/tiers/activated/${buttonImage}.png`,
+                            imgHover: `img/tiers/activated/${buttonImage}.png`,
+                            className: "search-icon action searchTier1",
+                            buttonType: "toggle",
+                        })
+                    }
+                    function garageFilter(divId, rooms, buttonImage) {
+                        createButton({
+                            layerId: divId,
+                            positionType: 'flex',
+                            position: { top: 10, right: 500 },
+                            imgSize: { width: 150, height: 150 },
+                            padding: { left: 10 },
+                            callbackAction: function () {
+                                //switch to search panel
+                                console.log('buttonImage', buttonImage);
+                                addremoveFromArray(filters.garage, rooms)
+                                updateLotsGeometry()
+                            },
+                            imgSrc: `img/tiers/${buttonImage}.png`,
+                            imgMouseDown: `img/tiers/activated/${buttonImage}.png`,
+                            imgHover: `img/tiers/activated/${buttonImage}.png`,
+                            className: "search-icon action searchTier1",
+                            buttonType: "toggle",
+                        })
+                    }
+                    function roomsFilter(divId, rooms, buttonImage) {
+                        createButton({
+                            layerId: divId,
+                            positionType: 'flex',
+                            position: { top: 10, right: 500 },
+                            imgSize: { width: 150, height: 150 },
+                            padding: { left: 10 },
+                            callbackAction: function () {
+                                //switch to search panel
+                                console.log('buttonImage', buttonImage);
+                                addremoveFromArray(filters.room, rooms)
+                                updateLotsGeometry()
+                            },
+                            imgSrc: `img/tiers/${buttonImage}.png`,
+                            imgMouseDown: `img/tiers/activated/${buttonImage}.png`,
+                            imgHover: `img/tiers/activated/${buttonImage}.png`,
+                            className: "search-icon action searchTier1",
+                            buttonType: "toggle",
+                        })
+                    }
+
+                }
+                //=============================================
+                //================[END]SEARCH BARS=============
+                //=============================================
+
+            })
+
+
+            //BUILDERS data
+            getObject('object_14').then(json => {
+                console.log('BUILDERS', json);
+                mainData.builders = json.map(i => {
+
+                    const inactiveImg = (new DOMParser()).parseFromString(i.Builder_FilterButton_InActive, 'text/html').querySelector('img');
+                    const inactive = inactiveImg.src;
+                    const activeImg = (new DOMParser()).parseFromString(i.Builder_FilterButton_Active, 'text/html').querySelector('img');
+                    const active = activeImg.src;
+
+                    return {
+                        inactive,
+                        active,
+                        builderName: i.Builder_Name,
+                        builderId: i.Builder_ID
+                    }
+                });
+
+                mainData.builders.map(i => {
+                    console.log('=============', i);
+                    createBuilder('searchPanelTier3', i.builderId, i.active, i.inactive)
+                })
+
+                function createBuilder(divId, builderId, buttonImageOn, buttonImageOff) {
+                    createButton({
+                        layerId: divId,
+                        positionType: 'flex',
+                        position: { top: 10, right: 500 },
+                        imgSize: { width: 115, height: 42 },
+                        padding: { left: 10 },
+                        callbackAction: function () {
+                            //switch to search panel
+                            addremoveFromArray(filters.builders, builderId)
+                            updateLotsGeometry()
+                        },
+                        imgSrc: buttonImageOn,
+                        imgMouseDown: buttonImageOff,
+                        imgHover: buttonImageOff,
+                        className: "search-icon action",
+                        buttonType: "toggle",
+                    })
+                }
+            })
+
+
+
+            //get RELEASES data
+            getObject('object_3').then(json => {
+
+                console.log('RELEASES', json);
+
+                mainData.releases = [];
+                mainData.releases.push(...json)
+                const data = json.filter(i => i['Release_Polygon_Active'].toLowerCase() === "true") //filter by Lot_Polygon_Active
+
+
+                const releases = data
+                    .filter(i => i.Release_Polygon_Data !== "")
+                    .map(i => {
+                        const geometry = JSON.parse(i.Release_Polygon_Data);
+                        geometry.id = i.Release_ID
+                        geometry.properties.webHook = i.Release_Webhook;
+                        geometry.properties.lat = +i.Release_Centre_Lat;
+                        geometry.properties.lng = +i.Release_Centre_Long;
+                        geometry.properties.zoom = +i.Release_Centre_Zoom_Level;
+                        return geometry
+                    })
+
+                console.log('releases++++', releases);
+
+                map.getSource("releases").setData({
+                    "type": "FeatureCollection",
+                    "features": releases
+                })
+
+                //URL PARAMS
+                if (urlProps.releaseid && urlProps.releaseid > 0) {
+                    const c = data.find(i => +i['Release_ID'] === +urlProps.releaseid)
+                    if (c) {
+                        map.flyTo({
+                            center: [c.Lot_Longitude, +c.Lot_Latitude],
+                            zoom: urlProps.zoom
+                        })
+                    }
+                }
+
+            })
+
+
+            //get LOTS data
+            getObject('object_1').then(json => {
+
+                console.log('json', json);
+
+                mainData.lots = [];
+                mainData.lots.push(...json)
+
+                const data = json.filter(i => i['Lot_Polygon_Active'].toLowerCase() === "true") //filter by Lot_Polygon_Active
+
+                let bounds = new mapboxgl.LngLatBounds();
+                const pins = data
+                    //.filter(i => i['Lot_Status'].toLowerCase() === "sold")
+                    .map(i => {
+
+                        const latlng = [+i.Lot_Longitude, +i.Lot_Latitude];
+                        bounds.extend(latlng)
+
+                        return {
+                            "type": "Feature",
+                            "properties": {},
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": latlng
+                            },
+                            properties: {
+                                color: i['Lot_Indicator_Colour'],
+                            }
+                        };
+                    })
+                console.log('pins', pins);
+
+
+                map.getSource("pins").setData({
+                    "type": "FeatureCollection",
+                    "features": pins
+                })
+                const lotsGeometry = data
+                    .filter(i => i.Lot_Polygon_Data !== "")
+                    .map(i => {
+                        const lot = JSON.parse(i.Lot_Polygon_Data);
+                        lot.properties.color = i['Lot_Indicator_Colour'];
+                        lot.properties.webHook = i['Lot_Webhook'];
+                        lot.properties.id = i['Lot_Number'];
+                        lot.id = i['Lot_Number']
+                        // console.log('i', i);
+                        return lot
+                    })
+
+                const collection = {
+                    "type": "FeatureCollection",
+                    "features": lotsGeometry
+                };
+                console.log('collection!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', collection);
+                map.getSource("lots").setData(collection)
+
+
+                //URL PARAMS
+                if (urlProps.lotid && urlProps.lotid > 0) {
+                    const c = data.find(i => +i['LOT_ID'] === +urlProps.lotid)
+                    if (c) {
+                        map.flyTo({
+                            center: [c.Lot_Longitude, +c.Lot_Latitude],
+                            zoom: urlProps.zoom
+                        })
+                    }
+                }
+
+                if (urlProps.lotactive && urlProps.lotactive.length > 0) {
+                    const lots = urlProps.lotactive.split(",")
+                    lots.forEach(i => {
+
+                        const lotId = +i
+                        map.setFeatureState(
+                            { source: 'lots', id: lotId },
+                            { active: true }
+                        );
+
+                    })
+                }
+
+            })
+
+            //amenities categories with icons
+            getObject('object_7').then(json => {
+                const am = [];
+                mainData.amenities = [];
+                mainData.amenitiesDiv = {};
+                json
+                    //.filter(i => i['Amenity_Cat_Type'] === "External") // only External amenities should be on bottom tab
+                    .map(i => {
+
+                        const onIcon = i['Amenity_Cat_IconActive'];
+                        const offIcon = i['Amenity_Cat_IconInactive'];
+
+                        var imgOn = (new DOMParser()).parseFromString(onIcon, 'text/html').querySelector('img');
+                        const srcOn = imgOn.src;
+
+                        var imgOff = (new DOMParser()).parseFromString(offIcon, 'text/html').querySelector('img');
+                        const srcOff = imgOff.src;
+
+                        var on = document.createElement("IMG");
+                        on.setAttribute("src", srcOn);
+                        on.setAttribute("am_id", i.Amenity_Cat_ID);
+                        on.setAttribute("class", "am");
+
+                        var off = document.createElement("IMG");
+                        off.setAttribute("src", srcOff);
+                        off.setAttribute("am_id", i.Amenity_Cat_ID);
+                        off.setAttribute("class", "am");
+
+                        if (i['Amenity_Cat_Type'] === "External") {//for div use only External
+                            mainData.amenitiesDiv[i.Amenity_Cat_ID] = {
+                                on: srcOn,
+                                off: srcOff,
+                                onimg: on,
+                                offimg: off,
+                            };
+                        }
+
+                        mainData.amenities.push(i)
+
+                        //loading icons for amenities
+                        map.loadImage(srcOn, function (error, image) {
+                            map.addImage(i['Amenity_Cat_Name'], image);
+                        })
+                        map.loadImage(srcOff, function (error, image) {
+                            map.addImage(i['Amenity_Cat_Name'] + "_off", image);
+                        })
+                    })
+
+                //-------------URL FILTER PART-----------------------
+                //if ?amenitylist=false do not show amenities
+                //if ?amenitylist=1,2,3 etc show only this amenities
+                //if not defined show all
+                console.log('urlProps.amenityList', urlProps.amenityList);
+                let aFilter = [];
+                if (urlProps.amenityList && urlProps.amenityList.length > 0) {
+                    aFilter = urlProps.amenityList.split(",").map(i => +i);
+                    activeAmenities.push(...aFilter);
+                } else {
+                    activeAmenities.push(...json.map(i => +i.Amenity_Cat_ID))
+                }
+                //map.setFilter("amenitiesicon", ['in', ['get', 'amId'], ["literal", activeAmenities]]);
+                //-------------URL FILTER PART-----------------------
+
+                updateAmenitiesDiv()
+            })
+
+            //POPUP TOOLTIPS FOR RELEASES
+            //getObject('object_9').then(data => {
+            // console.log('Amenity', data);
+            //})
+
+
+            //list of amenities
+            getObject('object_9').then(data => {
+
+                console.log('Amenity', data);
+
+                // data = data
+
+                mainData.amenitiesList = data.filter(i => i.Amenity_Type === "External");
+                mainData.amenitiesListInternal = data.filter(i => i.Amenity_Type === "Internal");
+
+
+                //URL PARAMS
+                let aFilter = [];
+                if (urlProps.amenityList && urlProps.amenityList.length > 0) {
+                    aFilter = urlProps.amenityList.split(",").map(i => +i);
+                }
+
+                console.log('aFilter', aFilter);
+
+                const [minZoomExternal, maxZoomExternal] = [
+                    mainData.amenitiesList[0]['Amenity_Min_Zoom'],
+                    mainData.amenitiesList[0]['Amenity_Max_Zoom']
+                ]
+                //now it is controled by Amenity_External_Icon_Interpolate
+                //map.setLayerZoomRange("amenitiesicon", minZoomExternal, maxZoomExternal);//set min max  zoom level  for amenitiesicon
+
+
+                const amLilst = mainData.amenitiesList
+                    .map(i => {
+
+                        let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
+                        amId = +amId.innerText;
+                        //let amId = +i['Amenity_Category_ID'];
+
+                        const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
+                        return {
+                            "type": "Feature", "properties": {},
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": latlng
+                            },
+                            properties: {
+                                ...i,
+                                icon: i['Amenity_Category_Name'],
+                                amId: amId
+                            }
+                        };
+                    })
+
+                const collection = {
+                    "type": "FeatureCollection",
+                    "features": amLilst
+                };
+                console.log('amenities LIST ', collection);
+                map.getSource("amenities").setData(collection)
+
+                //==== INTERNAL =====
+
+                const amLilstInternal = mainData.amenitiesListInternal
+                    .map(i => {
+
+
+
+
+                        let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
+                        amId = +amId.innerText;
+
+                        // console.log('i[amenitiesListInternal]');
+                        // console.log('i[Amenity_Category_Name]', i['Amenity_Category_Name']);
+                        // console.log('i[Amenity_Category_ID]', amId);
+
+
+                        const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
+                        return {
+                            "type": "Feature", "properties": {},
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": latlng
+                            },
+                            properties: {
+                                ...i,
+                                icon: i['Amenity_Category_Name'] + "_off",
+                                amId: +i['Amenity_Category_ID']
+                            }
+                        };
+                    })
+                console.log('amLilstInternal', amLilstInternal);
+                map.getSource("amenitiesInternal").setData({
+                    "type": "FeatureCollection",
+                    "features": amLilstInternal
+                })
+                //==== INTERNAL =====
+
+
+
+                //URL PARAMS
+                if (urlProps.amenityid && urlProps.amenityid > 0) {
+                    const c = data.find(i => +i['Amenity_ID'] === +urlProps.amenityid)
+                    if (c) {
+                        map.flyTo({
+                            center: [c['Amenity Longitude'], +c.Amenity_Latitude],
+                            zoom: urlProps.zoom
+                        })
+                    }
+                }
+
+
+            })
+            map.addSource("myImageSource", {
+                "type": "image",
+                "url": "Original_rendered8k_web.png",
+                //qgis tiff layer
+                "coordinates": [
+                    [150.674623517, -34.209824792], [150.704952437, -34.209824792], [150.704952437, -34.236197063], [150.674623517, -34.236197063]
+                ]
+            });
+            map.addLayer({
+                "id": "overlay",
+                "source": "myImageSource",
+                "type": "raster",
+                "paint": {
+                    "raster-opacity": 0.85
+                }
+            });
+
+            //RELEASES
+            map.addSource('releases', { //mapbox source for geojson data
+                'type': 'geojson',
+                'data': {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+            map.addLayer({
+                'id': 'releases-fills',
+                'type': 'fill',
+                'source': 'releases',
+                'layout': {},
+                'paint': {
+                    'fill-color': 'red',
+                    'fill-opacity': [
+                        'case',
+                        ['boolean', ['feature-state', 'hover'], false],
+                        0.5,
+                        0.
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'releases-borders',
+                'type': 'line',
+                'source': 'releases',
+                'layout': {},
+                'paint': {
+                    'line-color': 'white',
+                    'line-width': 2,
+                    'line-opacity': 1
+                }
+            });
+
+            //Project_Label_Image
+            map.addSource('project_image', {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+            map.addLayer({
+                'id': 'project_image',
+                'source': 'project_image',
+                'type': 'symbol',
+                'layout': {
+                    'icon-image': ['get', 'icon'],
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'icon-size': 1
+                }
+            });
+
+
+
+            map.addSource('amenities', {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+
+
+            map.addLayer({
+                'id': "amenitiesicon",
+                'source': 'amenities',
+                'type': 'symbol',
+                'layout': {
+                    'icon-image': ['get', 'icon'],
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    'icon-size': 1
+                }
+            });
+
+
+            // map.addLayer({
+            //     'id': 'circles',
+            //     'type': 'circle',
+            //     'source': 'amenities',
+            //     'paint': {
+            //         'circle-radius': 2,
+            //         'circle-color': 'blue',
+            //         'circle-stroke-color': 'white',
+            //         'circle-stroke-width': 1,
+
+            //     }
+            // });
+
+            map.addSource('amenitiesInternal', {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+            map.addLayer({
+                'id': 'amenitiesiconInternal',
+                'source': 'amenitiesInternal',
+                'type': 'symbol',
+                'layout': {
+                    'icon-image': ['get', 'icon'],
+                    'icon-allow-overlap': true,
+                    'icon-ignore-placement': true,
+                    //'icon-size': 0.5,
+
+                    "icon-size": ['interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        10, 0.1,
+                        15, 0.1,
+                        16, 0.1,
+                        17, 0.5,
+                        22, 0.5
+                    ]
+                }
+            });
+            // map.addLayer({
+            //     'id': 'population',
+            //     'type': 'circle',
+            //     'source': 'amenitiesInternal',
+            //     'paint': {
+            //         'circle-radius': {
+            //             'base': 1.75,
+            //             'stops': [
+            //                 [12, 2],
+            //                 [22, 180]
+            //             ]
+            //         },
+            //         'circle-color': 'red'
+            //     }
+            // });
+
+
+            map.addSource('lots', { //mapbox source for geojson data
+                'type': 'geojson',
+                'data': {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+
+            map.addLayer({
+                'id': 'lots-fills',
+                'type': 'fill',
+                'source': 'lots',
+                'layout': {},
+                minZoom: 22,//init zoom, to remove flickering while waiting for admin vars to load
+                'paint': {
+                    'fill-color': ['get', 'color'],
+                    'fill-opacity': [
+                        'case',
+                        ['boolean', ['feature-state', 'hover'], false],
+                        0.5,
+                        0
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'lots-active',
+                'type': 'fill',
+                'source': 'lots',
+                'layout': {},
+                minZoom: 22,//init zoom, to remove flickering while waiting for admin vars to load
+                'paint': {
+                    'fill-color': ['get', 'color'],
+                    'fill-opacity': [
+                        'case',
+                        ['boolean', ['feature-state', 'active'], false],
+                        0.5,
+                        0
+                    ]
+                }
+            });
+            map.addLayer({
+                'id': 'lots-borders',
+                'type': 'line',
+                'source': 'lots',
+                minZoom: 22,//init zoom, to remove flickering while waiting for admin vars to load
+                'layout': {},
+                'paint': {
+                    'line-color': 'white',
+                    'line-width': 2
+                }
+            });
+            map.addSource('pins', {
+                "type": "geojson",
+                "data": {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+            });
+            map.addLayer({
+                'id': 'lots-pins',
+                'type': 'circle',
+                'source': 'pins',
+                minZoom: 22,//init zoom, to remove flickering while waiting for admin vars to load
+                'paint': {
+                    'circle-radius': 15,
+                    'circle-color': ['get', 'color'],
+                    'circle-stroke-color': 'white',
+                    'circle-stroke-width': 1
+                }
+            });
+
+
+            //==================RELEASES======================================
+            map.on('click', 'releases-fills', function (e) {
+                console.log('e.features[0]', e.features[0]);
+                const props = e.features[0].properties;
+                if (e.features.length > 0) {
+                    if (clickedStateId) {
+                        map.setFeatureState(
+                            { source: 'releases', id: clickedStateId },
+                            { active: false }
+                        );
+                    }
+                    clickedStateId = e.features[0].id;
+                    map.setFeatureState(
+                        { source: 'releases', id: clickedStateId },
+                        { active: true }
+                    );
+                }
+                map.flyTo({
+                    center: [props.lng, props.lat],
+                    zoom: props.zoom
+                })
+                webHook(e.features[0].properties['webHook'])
+            });
+            map.on('mousemove', 'releases-fills', function (e) {
+
+                console.log('e!!!', e);
+                new mapboxgl.Popup({ closeOnClick: false })
+                    .setLngLat()
+                    .setHTML('<h1>Hello World!</h1>')
+                    .addTo(map);
+
+                if (e.features.length > 0) {
+                    if (releasesSatetId) {
+                        map.setFeatureState(
+                            { source: 'releases', id: releasesSatetId },
+                            { hover: false }
+                        );
+                    }
+                    releasesSatetId = e.features[0].id;
+                    map.setFeatureState(
+                        { source: 'releases', id: releasesSatetId },
+                        { hover: true }
+                    );
+                }
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', 'releases-fills', function () {
+                if (releasesSatetId) {
+                    map.setFeatureState(
+                        { source: 'releases', id: releasesSatetId },
+                        { hover: false }
+                    );
+                }
+                releasesSatetId = null;
+                map.getCanvas().style.cursor = '';
+            });
+
+
+            //==================project_image======================================
+            map.on('click', 'project_image', function (e) {
+                console.log('e', e);
+                const webhook = mainData.admin.Project_Webhook;
+                fetch(webhook)
+                map.flyTo({
+                    center: [+mainData.admin['Project_Longitude'], +mainData.admin['Project_Latitude']],
+                    zoom: +mainData.admin['Project_Zoom_Level']
+                })
+                openSidePannel()
+            });
+            map.on('mousemove', 'project_image', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', 'project_image', function () {
+                map.getCanvas().style.cursor = '';
+            });
+
+            //==================amenities======================================
+            map.on('click', 'amenitiesicon', function (e) {
+
+                console.log('e.features[0]', e.features[0]);
+                const webhook = e.features[0].properties['Amenity_Webhook'];
+                const Amenity_ID = e.features[0].properties['Amenity_ID'];
+                //  console.log('webhook', webhook);
+                //  webHook(webhook)
+                updateAmenities(Amenity_ID)
+
+                openSidePannel()
+            });
+
+            map.on('mousemove', 'amenitiesicon', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            // When the mouse leaves the state-fill layer, update the feature state of the
+            // previously hovered feature.
+            map.on('mouseleave', 'amenitiesicon', function () {
+                map.getCanvas().style.cursor = '';
+            });
+
+            //==================amenities INTERNAL======================================
+            map.on('click', 'amenitiesiconInternal', function (e) {
+
+            });
+
+            map.on('mousedown', 'amenitiesiconInternal', function (e) {
+
+                console.log('e.features[0]', e.features[0]);
+                const webhook = e.features[0].properties['Amenity_Webhook'];
+                const Amenity_ID = e.features[0].properties['Amenity_ID'];
+
+                //console.log('webhook', webhook);
+                //webHook(webhook)
+                //updateAmenities(Amenity_ID)
+
+                const amLilst = mainData.amenitiesListInternal
+                    .map(i => {
+                        const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
+                        let icon;
+
+                        if (Amenity_ID && Amenity_ID === i.Amenity_ID) {
+                            icon = i['Amenity_Category_Name']
+                        } else {
+                            icon = i['Amenity_Category_Name'] + "_off"
+                        }
+                        return {
+                            "type": "Feature", "properties": {},
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": latlng
+                            },
+                            properties: {
+                                ...i,
+                                icon: icon,
+                                amId: +i['Amenity_Category_ID']
+                            }
+                        };
+                    })
+                const collection = {
+                    "type": "FeatureCollection",
+                    "features": amLilst
+                };
+                map.getSource("amenitiesInternal").setData(collection)
+
+
+                const props = e.features[0].properties;
+
+                if (Amenity_ID && +Amenity_ID > 0) {
+
+                    const amId = props.amId;
+                    const amIcon = mainData.amenities.find(i => i.Amenity_Cat_ID === amId)
+                    const amIconImg = (amIcon) ? amIcon.Amenity_Cat_IconInactive : "";
+
+                    console.log('Amenity_ID', Amenity_ID);
+                    console.log('amId', amId);
+
+                    const html = `
+                    <div>
+                        <img src="data/POI/${Amenity_ID}.png" style="width:100%">
+                    </div>
+                    <div class="am_titles">
+                        ${amIconImg}
+                        <h2>${props['Amenity_Display_Title']}</h2>
+                    </div>
+                    <div class="am_descr">
+                        ${props['Amenity_Display_Description']}
+                    </div>
+                    `
+                    openSidePannel(html)
+                }
+
+            });
+            map.on('mouseup', 'amenitiesiconInternal', function (e) {
+                //ALL ICONS OFF
+                const amLilst = mainData.amenitiesListInternal
+                    .map(i => {
+
+                        let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
+                        amId = +amId.innerText;
+
+
+                        const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
+                        return {
+                            "type": "Feature", "properties": {},
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": latlng
+                            },
+                            properties: {
+                                ...i,
+                                icon: i['Amenity_Category_Name'] + "_off",
+                                amId: amId
+                            }
+                        };
+                    })
+                const collection = {
+                    "type": "FeatureCollection",
+                    "features": amLilst
+                };
+                map.getSource("amenitiesInternal").setData(collection)
+            });
+
+            map.on('mousemove', 'amenitiesiconInternal', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', 'amenitiesiconInternal', function () {
+                map.getCanvas().style.cursor = '';
+            });
+
+            //==================LOTS======================================
+            map.on('click', 'lots-active', function (e) {
+                console.log('e.features[0]', e.features[0]);
+                if (e.features.length > 0) {
+                    if (clickedStateId) {
+                        map.setFeatureState(
+                            { source: 'lots', id: clickedStateId },
+                            { active: false }
+                        );
+                    }
+                    clickedStateId = e.features[0].id;
+                    map.setFeatureState(
+                        { source: 'lots', id: clickedStateId },
+                        { active: true }
+                    );
+                }
+                webHook(e.features[0].properties['webHook'])
+
+                const id = e.features[0].properties?.id;
+                const lotData = mainData.lots.find(i => i['Lot_Number'] === id)
+                let lotText = '';
+
+                if (lotData) {
+
+                    console.log('lotData', lotData);
+                    console.log('lotData', lotData);
+
+                    if (lotData['Lot_Type'] === "Land") {
+                        lotText = `
+                        <div class="lotLandOnly">
+                            <div>
+                                <img src="data/Bingara_Local_Files/${id}/lot.png" style="width:100%">
+                            </div>
+                            <div>
+                                <div class="lotItem"><h2>Lot: ${lotData['Lot_Number']}</h2></div>
+                                <div class="lotItem">
+                                    <h2>${lotData['Lot_Status']}</h2>
+                                    <span class="dot ${lotData['Lot_Status']?.toLowerCase()}"></span>
+                                </div>
+
+                                <div class="lotItem">Lot Width: ${lotData['Lot_Width']}m</div>
+                                <div class="lotItem">Lot Depth: ${lotData['Lot_Depth']}m</div>
+                                <div class="lotItem">Lot Size: ${lotData['Lot_Size']}m<sup>2</sup></div>
+
+                                <div class="lotItem">Land Price: $${Number(lotData['Lot_Land_Price']).toLocaleString('en')}</div>
+                                    
+                                <div class="lotItem">Total Price</div>
+
+                                <div id="qrcode"></div>
+                            </div>
+                        </div>
+                        `
+                    }
+
+                    if (lotData['Lot_Type'] === "House & Land") {
+                        lotText = `
+                        <div style="padding:10px;">
+                            <div>
+                                <div class="lotItem title" >${lotData['Lot_Home_Facade']}</div>
+                            </div>
+                            <div>
+                                <img src="data/Lots/${id}/hero.jpg" style="width:100%">
+                            </div>
+                            <div>
+                                <div class="inlineRow">
+                                    <div class="lotItem">Lot: ${lotData['Lot_Number']}</div>
+                                    <div class="lotItem">${lotData['Lot_Status']}</div>
+                                </div>
+                                <div class="inlineRow">
+                                    <div class="lotItem"><img src="img/bed.png">${lotData['Lot_Bedrooms']}</div>
+                                    <div class="lotItem"><img src="img/bath.png">${lotData['Lot_Bathrooms']}</div>
+                                    <div class="lotItem"><img src="img/bed.png">${lotData['Lot_CarSpaces']}</div>
+                                </div>
+
+                                <div class="houseDescr">
+                                    <div class="lotItem"><span>Lot Width</span>: ${lotData['Lot_Width']}m</div>
+                                    <div class="lotItem"><span>Lot Depth</span>: ${lotData['Lot_Depth']}m</div>
+                                    <div class="lotItem"><span>Lot Size</span>: ${lotData['Lot_Size']}m<sup>2</sup></div>
+                                    <div class="lotItem"><span>Land Price</span>: $${Number(lotData['Lot_Land_Price']).toLocaleString('en')}</div>
+                                    <div class="lotItem"><span>House price</span>: $${Number(lotData['Lot_House_Price']).toLocaleString('en')}</div>
+                                    <div class="lotItem"><span>Package price</span>: $${Number(lotData['Lot_Price']).toLocaleString('en')}</div>
+                                </div>
+
+                                <div id="qrcode"></div>
+                            </div>
+                        </div>
+                        `
+                    }
+                }
+
+                if (id && +id > 0) {
+                    openSidePannel(lotText)
+
+                    //generate qr code
+                    if (document.getElementById("qrcode")) {
+
+                        const pdf = (new DOMParser()).parseFromString(lotData['LOT_PDF'], 'text/html').querySelector('a').getAttribute("href");
+                        console.log('pdf', pdf);
+                        new QRCode(document.getElementById("qrcode"), {
+                            text: pdf,
+                            width: 170,
+                            height: 170,
+                        });
+                    }
+                }
+            });
+
+
+            // map.on('click', 'lots-fills', (e) => {
+            //     console.log('e.features[0].properties',e.features[0].properties);
+            // })
+
+            map.on('mousemove', 'lots-fills', function (e) {
+                if (e.features.length > 0) {
+                    if (hoveredStateId) {
+                        map.setFeatureState(
+                            { source: 'lots', id: hoveredStateId },
+                            { hover: false }
+                        );
+                    }
+                    hoveredStateId = e.features[0].id;
+                    map.setFeatureState(
+                        { source: 'lots', id: hoveredStateId },
+                        { hover: true }
+                    );
+                }
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            // When the mouse leaves the state-fill layer, update the feature state of the
+            // previously hovered feature.
+            map.on('mouseleave', 'lots-fills', function () {
+                if (hoveredStateId) {
+                    map.setFeatureState(
+                        { source: 'lots', id: hoveredStateId },
+                        { hover: false }
+                    );
+                }
+                hoveredStateId = null;
+                map.getCanvas().style.cursor = '';
+            });
+
+
+            // When the user moves their mouse over the state-fill layer, we'll update the
+            // feature state for the feature under the mouse.
+            map.on('mousemove', 'lots-pins', function (e) {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('moveend', () => {
+
+                getInfo();
+            })
+            map.on('click', (e) => {
+                if (urlProps.debugMode) {
+                    console.log('e', e);
+                    var popup = new mapboxgl.Popup({ closeOnClick: false })
+                        .setLngLat(e.lngLat)
+                        .setHTML(`
+                ${e.lngLat}
+                    <br>
+                        zoom: ${map.getZoom()}
+            `)
+                        .addTo(map);
+                }
+            })
+
+            function getInfo() {
+                const c = map.getCenter();
+                const z = map.getZoom();
+                infoDiv.innerHTML = `center: ${c}<br>zoom: ${z}`;
+            }
+        });
+
+        function openSidePannel(data) {
+            document.getElementById("mySidepanel").style.width = "450px";
+            sidePanelContent.innerHTML = data;
+        }
+        function closeSidePannel() {
+            document.getElementById("mySidepanel").style.width = "0";
+        }
+
+        function webHook(url) {
+            // console.log('url', url);
+            if (!url || url === "") return;
+            var a = (new DOMParser()).parseFromString(url, 'text/html').querySelector('a');
+            const href = a.href;
+            // console.log('href', href);
+            fetch(href)
+        }
+        //===============KNACK=======================
+        //===============KNACK=======================
+        //===============KNACK=======================
+
+        //VIEW based EXAMPLE  
+        /*
+        const knack_id = '616391ee2e9161001e613faa';
+        const knack_key = '5a1d6530-0006-43dd-8834-483e1c6ec6ea'; 
+        const fetchOptions = {
+                    cache: "force-cache"
+                }
+        fetch('https://api.knack.com/v1/pages/scene_50/views/view_50/records?rows_per_page=1000', {
+                        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                        mode: 'cors', // no-cors, *cors, same-origin
+                        ...fetchOptions,
+                        credentials: 'same-origin', // include, *same-origin, omit
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Knack-Application-Id': knack_id, // change to your app's API info
+                            'X-Knack-REST-API-Key': knack_key
+                        },
+                    })
+                        .then(i => i.json()).then(i=>console.log(i))
+                */
+
+        async function getObject(objectId) {
+
+            const knack_id = '616391ee2e9161001e613faa';
+            const knack_key = '5a1d6530-0006-43dd-8834-483e1c6ec6ea';
+            let keys = [];
+            let res = [];
+
+            await fetch('https://api.knackhq.com/v1/objects/' + objectId + '/fields', {
+                method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                mode: 'cors', // no-cors, *cors, same-origin
+                ...fetchOptions,
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Knack-Application-Id': knack_id, // change to your app's API info
+                    'X-Knack-REST-API-Key': knack_key
+                },
+            })
+                .then(i => i.json())
+                .then(i => {
+                    keys = i.fields
+                })
+
+            //https://api.knack.com/v1/pages/scene_key/views/view_key/records
+            //https://api.knack.com/v1/pages/scene_50/views/view_50/records
+
+            await fetch('https://api.knack.com/v1/objects/' + objectId + '/records?rows_per_page=1000', {
+                method: 'GET', // *GET, POST, PUT, DELETE, etc.
+                mode: 'cors', // no-cors, *cors, same-origin
+                ...fetchOptions,
+                credentials: 'same-origin', // include, *same-origin, omit
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Knack-Application-Id': knack_id, // change to your app's API info
+                    'X-Knack-REST-API-Key': knack_key
+                },
+            })
+                .then(i => i.json())
+                .then(data => {
+                    res = data.records.map(i => {
+                        const temp = {};
+                        Object.keys(i).map(s => {
+                            const name = keys.find(k => k.key === s);
+                            if (name) {
+                                temp[name.label] = i[s]
+                            }
+                        });
+                        return temp;
+                    })
+                })
+
+            loadingDone(objectId);
+            return res
+        }
+
+        const loaded = [];
+        function loadingDone(param) {
+            loaded.push(param)
+            if (loaded.length === 4) {
+                console.log('ALLDONE!');
+                //fetch('https://api.intuiface.com/webtriggers/v1/sendMessage?message=maploaded&playerTags=bingaramap&apikey=b58eded3-1d8b-40f3-8908-9d93335832bc');
+                fetch('https://api.intuiface.com/webtriggers/v1/sendMessage?message=maploaded&playerTags=bingaramap&apikey=b58eded3-1d8b-40f3-8908-9d93335832bc');
+            }
+        }
+
+        function getUrlParams() {
+
+            const url = new URL(window.location);
+            const lat = +url.searchParams.get('lat');
+            const lng = +url.searchParams.get('lng');
+
+            const debugMode = url.searchParams.get('debug');
+            const amenityList = url.searchParams.get('amenitylist');
+            const amenityid = +url.searchParams.get('amenityid');
+            const lotid = +url.searchParams.get('lotid');
+            const releaseid = +url.searchParams.get('releaseid');
+            const lotactive = url.searchParams.get('lotactive');
+
+            let zoom = +url.searchParams.get('zoom');
+
+            urlProps.lat = lat
+            urlProps.lng = lng
+            urlProps.amenityid = amenityid
+            urlProps.lotid = lotid
+            urlProps.releaseid = releaseid
+            urlProps.zoom = zoom
+            urlProps.amenityList = amenityList
+            urlProps.debugMode = debugMode
+            urlProps.lotactive = lotactive
+
+
+            if (!zoom) zoom = map.getZoom();
+
+            if (lat && lng) {
+                map.flyTo({
+                    center: [lng, lat],
+                    zoom
+                })
+            } else {
+                map.flyTo({
+                    center: map.getCenter(),
+                    zoom
+                })
+            }
+
+            if (debugMode) {
+                infoDiv.style.display = 'inline'
+            }
+
+        }
+
+
+        //LISTEN TO URL UPDATES
+        history.pushState = (f => function pushState() {
+            var ret = f.apply(this, arguments);
+            window.dispatchEvent(new Event('pushstate'));
+            window.dispatchEvent(new Event('locationchange'));
+            return ret;
+        })(history.pushState);
+
+        history.replaceState = (f => function replaceState() {
+            var ret = f.apply(this, arguments);
+            window.dispatchEvent(new Event('replacestate'));
+            window.dispatchEvent(new Event('locationchange'));
+            return ret;
+        })(history.replaceState);
+
+        window.addEventListener('popstate', () => {
+            window.dispatchEvent(new Event('locationchange'))
+        });
+
+        window.addEventListener('locationchange', function () {
+            console.log('location changed!');
+        })
+
+        //*/
+
+
+        /**
+        * @param slider HtmlElement with an initialized slider
+        * @param threshold Minimum proximity (in percentages) to merge tooltips
+        * @param separator String joining tooltips
+        */
+        function mergeTooltips(slider, threshold, separator, tooltip) {
+
+            const moneyFormat = wNumb(tooltip)
+
+            var textIsRtl = getComputedStyle(slider).direction === 'rtl';
+            var isRtl = slider.noUiSlider.options.direction === 'rtl';
+            var isVertical = slider.noUiSlider.options.orientation === 'vertical';
+            var tooltips = slider.noUiSlider.getTooltips();
+            var origins = slider.noUiSlider.getOrigins();
+
+            // Move tooltips into the origin element. The default stylesheet handles this.
+            tooltips.forEach(function (tooltip, index) {
+                if (tooltip) {
+                    origins[index].appendChild(tooltip);
+                }
+            });
+
+            slider.noUiSlider.on('update', function (values, handle, unencoded, tap, positions) {
+
+                var pools = [[]];
+                var poolPositions = [[]];
+                var poolValues = [[]];
+                var atPool = 0;
+
+                // Assign the first tooltip to the first pool, if the tooltip is configured
+                if (tooltips[0]) {
+                    pools[0][0] = 0;
+                    poolPositions[0][0] = positions[0];
+                    poolValues[0][0] = values[0];
+                }
+
+                for (var i = 1; i < positions.length; i++) {
+                    if (!tooltips[i] || (positions[i] - positions[i - 1]) > threshold) {
+                        atPool++;
+                        pools[atPool] = [];
+                        poolValues[atPool] = [];
+                        poolPositions[atPool] = [];
+                    }
+
+                    if (tooltips[i]) {
+
+                        pools[atPool].push(i);
+                        poolValues[atPool].push(values[i]);
+                        poolPositions[atPool].push(positions[i]);
+                    }
+                }
+
+                pools.forEach(function (pool, poolIndex) {
+                    var handlesInPool = pool.length;
+
+                    for (var j = 0; j < handlesInPool; j++) {
+                        var handleNumber = pool[j];
+
+                        if (j === handlesInPool - 1) {
+                            var offset = 0;
+
+                            poolPositions[poolIndex].forEach(function (value) {
+                                offset += 1000 - 10 * value;
+                            });
+
+                            var direction = isVertical ? 'bottom' : 'right';
+                            var last = isRtl ? 0 : handlesInPool - 1;
+                            var lastOffset = 1000 - 10 * poolPositions[poolIndex][last];
+                            offset = (textIsRtl && !isVertical ? 100 : 0) + (offset / handlesInPool) - lastOffset;
+
+                            //console.log('JSON.stringify(poolValues)', JSON.stringify(poolValues[poolIndex][0]));
+
+                            const formated = poolValues[poolIndex].map(i => {
+                                return moneyFormat.to(+i)
+                            })
+
+                            // Center this tooltip over the affected handles
+                            // tooltips[handleNumber].innerHTML = poolValues[poolIndex].join(separator);
+                            tooltips[handleNumber].innerHTML = formated.join(separator);
+                            tooltips[handleNumber].style.display = 'block';
+                            tooltips[handleNumber].style[direction] = offset + '%';
+                        } else {
+                            // Hide this tooltip
+                            tooltips[handleNumber].style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+    </script>
+
+</body>
+
+</html>
