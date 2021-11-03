@@ -212,7 +212,7 @@
         .noUi-horizontal .noUi-handle {
             width: 58px;
             height: 58px;
-            background: #004282 ;
+            background: #004282;
             border-radius: 60px;
             border: none;
             box-shadow: none;
@@ -314,15 +314,22 @@
         }
 
         .search-bar {
-            background-image: url('img/search-bar-right.png');
+            /* background-position: calc(100% + 200px) center; */
+            /* background-image: url('img/search-bar-right.png');
             background-repeat: no-repeat;
             background-position: center right;
-            /* background-position: calc(100% + 200px) center; */
-            background-size: 1111px 200px;
+            background-size: 1111px 200px; */
             padding: 0px;
             margin: 0px;
             border: 0px solid #0C6CDE;
             height: 100px;
+
+
+            background-image: url('img/search-bar-right.png'), url('img/Footer.png');
+            background-position: center right, left top;
+            background-repeat: no-repeat, no-repeat;
+            /* background-size: 1111px 200px, 1111px 200px; */
+            background-size: 1111px 200px, 100% 200px;
         }
 
         .action {
@@ -551,7 +558,8 @@
 
         @media screen and (max-width: 1920px) {
             .search-bar {
-                background-size: 500px 100px;
+                /* background-size: 500px 100px; */
+                background-size: 500px 100px, 100% 100px;
             }
 
             #zoomButtons {
