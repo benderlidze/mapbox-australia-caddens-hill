@@ -1002,8 +1002,14 @@
                 } else {
                     activeAmenities.push(amId)
                 }
-                console.log('amId', amId);
+
                 const am = mainData.amenities.find(i => +i['Amenity_Cat_ID'] === +amId)
+
+                const amList = mainData.amenitiesList.filter(i => i['Amenity_Category_Name'] === am.Amenity_Cat_Name)
+
+                console.log('amId', amId);
+                console.log('amList', amList);
+
                 if (am) {
                     const center = [+am['Amenity_Cat_Longitude'], +am['Amenity_Cat_Latitude']]
                     const zoom = [am['Amenity_Cat_Zoom']]
@@ -1011,10 +1017,25 @@
                     if (!unselect) {
 
                         webHook(am['Amenity_Cat_Webhook'])
-                        map.flyTo({
-                            center,
-                            zoom
-                        })
+
+                        if (amList && amList.length > 0) {
+
+                            var bounds = new mapboxgl.LngLatBounds();
+                            amList.forEach(i => {
+                                bounds.extend([
+                                    +i['Amenity Longitude'],
+                                    +i['Amenity_Latitude']
+                                ])
+                            })
+                            map.fitBounds(bounds, { padding: 50 });
+
+                        } else {
+                            map.flyTo({
+                                center,
+                                zoom
+                            })
+                        }
+
                     }
                 }
 
@@ -1331,9 +1352,11 @@
                     const latlng = [+i['Amenity Longitude'], +i['Amenity_Latitude']];
                     let icon;
 
-                    let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
-                    amId = +amId.innerText;
 
+                    let amId = (new DOMParser()).parseFromString(i['Amenity_Category_ID'], 'text/html').querySelector('span');
+
+                    amId = +amId.innerText;
+                    console.log('i[Amenity_Category_ID]', amId);
 
                     if (Amenity_ID && Amenity_ID === i.Amenity_ID) {
                         icon = i['Amenity_Category_Name']
