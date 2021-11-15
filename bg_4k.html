@@ -34,7 +34,7 @@
         }
 
         #amenities {
-            margin-left:20px;
+            margin-left: 20px;
         }
 
         .mapboxgl-ctrl-zoom-out {
@@ -116,7 +116,7 @@
             transition: 0.3s;
         }
 
-        #searchPanelTier1{
+        #searchPanelTier1 {
             margin-left: 20px;
         }
 
@@ -973,7 +973,7 @@
         getUrlParams();
         document.addEventListener("click", e => {
 
-            if (e.target.classList.contains("am")) {
+            if (e.target.classList.contains("am") && e.target.getAttribute("am_id")) {
                 console.log('amenity category clicked');
                 let unselect = false;
                 const amId = +e.target.getAttribute("am_id")
@@ -1205,8 +1205,18 @@
                 imgSize: { width: 150, height: 150 },
                 layerId: "zoomButtons",
                 callbackAction: function () {
+                    
+                    console.log('-----------------------------------',);
+                    const center = [+mainData.admin.Project_Longitude, +mainData.admin.Project_Latitude]
+                    const zoom = +mainData.admin.Project_Zoom_Level
+                    map.flyTo({
+                        center,
+                        zoom
+                    })
+
                     clearFilters()
                     updateLotsGeometry("clearFilter")
+
                 },
                 imgSrc: 'img/Reset button.png',
                 imgMouseDown: "img/Reset button_not active.png",
