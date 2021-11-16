@@ -782,6 +782,7 @@
         const activeAmenities = [];
         const mainData = {};
 
+        const knackURL =  'https://api.knackhq.com/v1/objects/'
         const knack_id = '616391ee2e9161001e613faa';
         const knack_key = '5a1d6530-0006-43dd-8834-483e1c6ec6ea';
         const fetchOptions = {
@@ -2745,7 +2746,7 @@
                                 <div class="inlineRow">
                                     <div class="lotItem"><img src="img/bed.png">${lotData['Lot_Bedrooms']}</div>
                                     <div class="lotItem"><img src="img/bath.png">${lotData['Lot_Bathrooms']}</div>
-                                    <div class="lotItem"><img src="img/bed.png">${lotData['Lot_CarSpaces']}</div>
+                                    <div class="lotItem"><img src="img/car.png">${lotData['Lot_CarSpaces']}</div>
                                 </div>
 
                                 <div class="houseDescr">
@@ -2895,7 +2896,7 @@
             let keys = [];
             let res = [];
 
-            await fetch('https://api.knackhq.com/v1/objects/' + objectId + '/fields', {
+            await fetch(knackURL + objectId + '/fields', {
                 ...fetchOptions
             })
                 .then(i => i.json())
@@ -2906,7 +2907,7 @@
             //https://api.knack.com/v1/pages/scene_key/views/view_key/records
             //https://api.knack.com/v1/pages/scene_50/views/view_50/records
 
-            await fetch('https://api.knack.com/v1/objects/' + objectId + '/records?rows_per_page=1000', {
+            await fetch(knackURL + objectId + '/records?rows_per_page=1000', {
                 ...fetchOptions,
             })
                 .then(i => i.json())
