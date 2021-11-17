@@ -573,6 +573,56 @@
             align-items: center;
         }
 
+        #legend {
+            width: 300px;
+            height: 50px;
+            position: absolute;
+            bottom: 100px;
+            left: 0px;
+            background-color: black;
+            color: white;
+            transition: 0.5s;
+        }
+
+        #legend img {
+            width: 20px;
+            height: 20px;
+        }
+
+        #legend-title {
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            height: 50px;
+            cursor: pointer;
+        }
+
+        #legend-close {
+            display: flex;
+            position: relative;
+            font-size: 36px;
+            border-radius: 100%;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            color: black;
+            background-color: white;
+        }
+
+        #legend-content>div {
+            display: flex;
+            padding: 3px;
+        }
+
+        #legend-content img {
+            padding-right: 10px
+        }
+
         @media screen and (max-width: 3400px) {
             .search-bar {
                 /* background-size: 500px 100px; */
@@ -663,6 +713,84 @@
                 bottom: 120px;
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        .container {
+            margin: 5px auto;
+        }
+
+        .container>input[type="radio"] {
+            position: absolute;
+            left: -200vw;
+        }
+
+        .container>label {
+            position: relative;
+            display: inline-block;
+            padding: 15px 15px 25px;
+            border: 1px solid transparent;
+            border-bottom: 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .container>label::after {
+            content: "";
+            position: absolute;
+            left: 15px;
+            bottom: 10px;
+            width: 22px;
+            height: 4px;
+            background: #8d8d8d;
+        }
+
+        .container>label:hover,
+        .container>input:focus+label {
+            color: #06c;
+        }
+
+        .container>label:hover::after,
+        .container>input:focus+label::after,
+        .container>input:checked+label::after {
+            background: #06c;
+        }
+
+        .container>input:checked+label {
+            border-color: #ccc;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+
+        .tab-content {
+            border-top: 1px solid #ccc;
+        }
+
+        .tab-content section.tab-panel {
+            padding: 30px 0;
+        }
+
+        /* The magic */
+        .container section.tab-panel {
+            display: none;
+        }
+
+        .container>input:first-child:checked~.tab-content>section.tab-panel:first-child,
+        .container>input:nth-child(3):checked~.tab-content>section.tab-panel:nth-child(2),
+        .container>input:nth-child(5):checked~.tab-content>section.tab-panel:nth-child(3) {
+            display: block;
+        }
     </style>
 </head>
 
@@ -675,6 +803,11 @@
 
     <div id="map"></div>
     <div id="info"></div>
+    <div id="legend">
+        <div id="legend-title">LEGEND</div>
+        <div id="legend-content"></div>
+        <div id="legend-close" class="">×</div>
+    </div>
 
     <div id="mainSearchPanel" class="search-bar">
 
@@ -770,6 +903,10 @@
         const amenitiesDiv = document.getElementById("amenities");
         const sidePanelContent = document.getElementById("sidePanelContent");
 
+        const legend = document.getElementById('legend');
+        const legendTitle = document.getElementById('legend-title');
+        const legendContent = document.getElementById('legend-content');
+        const legendClose = document.getElementById('legend-close');
 
         const searchLandMore = document.getElementById('searchLandMore');
         const searchPanelTier1 = document.getElementById('searchPanelTier1');
@@ -782,7 +919,7 @@
         const activeAmenities = [];
         const mainData = {};
 
-        const knackURL =  'https://api.knackhq.com/v1/objects/'
+        const knackURL = 'https://api.knackhq.com/v1/objects/'
         const knack_id = '616391ee2e9161001e613faa';
         const knack_key = '5a1d6530-0006-43dd-8834-483e1c6ec6ea';
         const fetchOptions = {
@@ -848,6 +985,14 @@
             closeOnClick: false
         });
 
+        // const legendTitle = document.getElementById('legend-title');
+        // const legendContent = document.getElementById('legend-content');
+        legendTitle.addEventListener("click", () => {
+            legend.style.height = `900px`;
+        })
+        legendClose.addEventListener("click", () => {
+            legend.style.height = `50px`;
+        })
 
         function updateLotsGeometry(clearFilter) {
 
@@ -1971,6 +2116,15 @@
 
             })
 
+            //get HOMES data
+            getObject('object_16').then(json => {
+
+                console.log('HOMES', json);
+                mainData.homes = [];
+                mainData.homes.push(...json)
+
+            })
+
 
             //get LOTS data
             getObject('object_1').then(json => {
@@ -2101,9 +2255,17 @@
                         })
 
                         map.loadImage(srcOff, function (error, image) {
-                            console.log('i[Amenity_Cat_Name]', i['Amenity_Cat_Name'] + "_off");
+                            // console.log('i[Amenity_Cat_Name]', i['Amenity_Cat_Name'] + "_off");
                             map.addImage(i['Amenity_Cat_Name'] + "_off", image);
                         })
+
+
+                        legendContent.innerHTML += `
+                            <div>
+                                <div>${i['Amenity_Cat_IconActive']}</div>
+                                <div>${i['Amenity_Cat_Name']}</div>
+                            </div>
+                        `
 
                     })
 
@@ -2699,11 +2861,85 @@
 
                 if (lotData) {
 
+
                     console.log('lotData', lotData);
-                    console.log('lotData', lotData);
+                    // ----------------------------- TABS ---------------------------------------
+                    // ----------------------------- TABS ---------------------------------------
+                    // ----------------------------- TABS ---------------------------------------
+                    // ----------------------------- TABS ---------------------------------------
+                    const homes = lotData['HOMEs'];
+                    let tabs = '';
+                    if (homes !== "") {
+                        const span = (new DOMParser()).parseFromString(homes, 'text/html').querySelectorAll('span')
+                        console.log('span', span);
+                        const homesData = Array.from(span).map(item => {
+                            return mainData.homes.find(home => home.DESIGN === item.innerText);
+                        })
+                        console.log('homesData', homesData);
+
+                        const tabNames = homesData.map((data, key) => {
+                            return `
+                                <input type="radio" id="tab-link-${key}" name="tabset" checked>
+                                <label for="tab-link-${key}">${data['FACADE']}</label>
+                            `
+                        }).join("")
+
+                        const tabContent = homesData.map((data, key) => {
+                            return `
+                                <section class="tab-panel" id="tab-${key}">
+                                    ${data['DESIGN']}
+
+                                    <div style="padding:10px;">
+                                        <div>
+                                            <div class="lotItem title" >${lotData['Lot_Home_Facade']}</div>
+                                        </div>
+                                        <div>
+                                            <img src="data/Lots/${id}/hero.jpg" style="width:100%">
+                                        </div>
+                                        <div>
+                                            <div class="inlineRow">
+                                                <div class="lotItem">Lot: ${lotData['Lot_Number']}</div>
+                                                <div class="lotItem">${lotData['Lot_Status']}</div>
+                                            </div>
+                                            <div class="inlineRow">
+                                                <div class="lotItem"><img src="img/bed.png">${data['BEDROOMS']}</div>
+                                                <div class="lotItem"><img src="img/bath.png">${data['BATHROOMS']}</div>
+                                                <div class="lotItem"><img src="img/car.png">${data['CAR_SPACES']}</div>
+                                            </div>
+
+                                            <div class="houseDescr">
+                                                <div class="lotItem"><span>Lot Width</span>: ${lotData['Lot_Width']}m</div>
+                                                <div class="lotItem"><span>Lot Depth</span>: ${lotData['Lot_Depth']}m</div>
+                                                <div class="lotItem"><span>Lot Size</span>: ${data['SIZE']}m<sup>2</sup></div>
+                                                <div class="lotItem"><span>Land Price</span>: $${Number(lotData['Lot_Land_Price']).toLocaleString('en')}</div>
+                                                <div class="lotItem"><span>House price</span>: $${Number(lotData['Lot_House_Price']).toLocaleString('en')}</div>
+                                                <div class="lotItem"><span>Package price</span>: $${Number(data['PRICING']).toLocaleString('en')}</div>
+                                            </div>
+
+                                            <div id="qrcode"></div>
+                                        </div>
+                                    </div>
+
+                                </section>
+                            `
+                        }).join("")
+
+                        tabs = `
+                            <div class="container">
+                                <!-- Tab 1 -->
+                                    ${tabNames}
+                                <!-- Tab content -->
+                                <div class="tab-content">
+                                    ${tabContent}
+                                </div>
+                            </div>
+                        `
+                    }
+
 
                     if (lotData['Lot_Type'] === "Land") {
                         lotText = `
+
                         <div class="lotLandOnly">
                             <div>
                                 <img src="data/Bingara_Local_Files/${id}/lot.png" style="width:100%">
@@ -2730,7 +2966,9 @@
                     }
 
                     if (lotData['Lot_Type'] === "House & Land") {
+
                         lotText = `
+                        ${tabs}
                         <div style="padding:10px;">
                             <div>
                                 <div class="lotItem title" >${lotData['Lot_Home_Facade']}</div>
@@ -2762,6 +3000,7 @@
                             </div>
                         </div>
                         `
+
                     }
                 }
 
