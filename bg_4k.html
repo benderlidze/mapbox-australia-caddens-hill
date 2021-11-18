@@ -24,6 +24,7 @@
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
+            overflow: hidden;
         }
 
         #map {
@@ -31,6 +32,7 @@
             top: 0;
             bottom: 0;
             width: 100%;
+            height: calc(100% - 200px);
         }
 
         #amenities {
@@ -574,20 +576,21 @@
         }
 
         #legend {
-            width: 300px;
+            width: 450px;
             height: 50px;
             position: absolute;
-            bottom: 100px;
+            bottom: 200px;
             left: 0px;
-            background-color: black;
+            background-color: #292829;
             color: white;
             transition: 0.5s;
+            z-index: 1000;
         }
 
-        #legend img {
+        /* #legend img {
             width: 20px;
             height: 20px;
-        }
+        } */
 
         #legend-title {
             display: flex;
@@ -620,10 +623,20 @@
         }
 
         #legend-content img {
-            padding-right: 10px
+            /* padding-right: 10px */
+            width: 450px;
         }
 
         @media screen and (max-width: 3400px) {
+
+            #map {
+                height: calc(100% - 100px);
+            }
+
+            #legend {
+                bottom: 100px;
+            }
+
             .search-bar {
                 /* background-size: 500px 100px; */
                 background-size: 500px 100px, 100% 100px;
@@ -791,6 +804,11 @@
         .container>input:nth-child(5):checked~.tab-content>section.tab-panel:nth-child(3) {
             display: block;
         }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+        }
     </style>
 </head>
 
@@ -805,8 +823,12 @@
     <div id="info"></div>
     <div id="legend">
         <div id="legend-title">LEGEND</div>
-        <div id="legend-content"></div>
-        <div id="legend-close" class="">×</div>
+        <div id="legend-content">
+            <img src="img/Legend@4x.png" alt="">
+        </div>
+        <div class="flex-center">
+            <div id="legend-close" class="">×</div>
+        </div>
     </div>
 
     <div id="mainSearchPanel" class="search-bar">
@@ -988,7 +1010,7 @@
         // const legendTitle = document.getElementById('legend-title');
         // const legendContent = document.getElementById('legend-content');
         legendTitle.addEventListener("click", () => {
-            legend.style.height = `900px`;
+            legend.style.height = `1000px`;
         })
         legendClose.addEventListener("click", () => {
             legend.style.height = `50px`;
@@ -1188,7 +1210,7 @@
                                     +i['Amenity_Latitude']
                                 ])
                             })
-                            map.fitBounds(bounds, { padding: 50 });
+                            map.fitBounds(bounds, { padding: 100 });
 
                         } else {
                             map.flyTo({
@@ -2259,14 +2281,14 @@
                             map.addImage(i['Amenity_Cat_Name'] + "_off", image);
                         })
 
-
+                        /*
                         legendContent.innerHTML += `
                             <div>
                                 <div>${i['Amenity_Cat_IconActive']}</div>
                                 <div>${i['Amenity_Cat_Name']}</div>
                             </div>
                         `
-
+                            */
                     })
 
                 //-------------URL FILTER PART-----------------------
@@ -2885,6 +2907,8 @@
                         }).join("")
 
                         const tabContent = homesData.map((data, key) => {
+
+                            const pPrice = data['PRICING']//?????????????????
                             return `
                                 <section class="tab-panel" id="tab-${key}">
                                     ${data['DESIGN']}
