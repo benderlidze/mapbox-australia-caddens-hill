@@ -354,7 +354,7 @@
         .sidepanel {
             width: 0;
             position: fixed;
-            z-index: 1;
+            z-index: 3;
             height: 100%;
             top: 0;
             left: 0;
@@ -578,13 +578,13 @@
         #legend {
             width: 450px;
             height: 50px;
-            position: absolute;
+            position: fixed;
             bottom: 200px;
             left: 0px;
             background-color: #292829;
             color: white;
             transition: 0.5s;
-            z-index: 1000;
+            z-index: 2;
         }
 
         /* #legend img {
@@ -1060,20 +1060,71 @@
                 return;
 
             }
+            // UPDATE LOTS WITH HOUSE TABLE DATA 
 
-            mainData.lots
+            const searchLotsData = JSON.parse(JSON.stringify(mainData.lots));
+            searchLotsData.forEach(lot => {
+                if (lot['HOMEs'] !== "") {
+                    const span = (new DOMParser()).parseFromString(lot['HOMEs'], 'text/html').querySelectorAll('span')
+                    const homesData = Array.from(span).map(item => {
+                        const design = item.innerText
+                        return mainData.homes.find(home => home['DESIGN'] === design)
+                    })
+
+
+                    lot['Lot_Bedrooms'] = [+lot['Lot_Bedrooms'], ...homesData.map(i => i['BEDROOMS'])].filter(Number)
+                    lot['Lot_CarSpaces'] = [+lot['Lot_CarSpaces'], ...homesData.map(i => i['CAR_SPACES'])].filter(Number)
+                    lot['Lot_Storeys'] = [+lot['Lot_Storeys'], ...homesData.map(i => i['STOREYS'])].filter(Number)
+
+                    lot['Lot_Home_Size'] = [+lot['Lot_Home_Size'], ...homesData.map(i => i['SIZE'])].filter(Number)
+
+
+                    console.log('homesData', homesData);
+                    const prices = homesData.map(i => {
+                        if (+i['TOTAL_PRICE'] > 0) {
+                            return +i['TOTAL_PRICE'];
+                        } else {
+                            return +i['HOME_PRICE'] + lot['Lot_Price']
+                        }
+                    })
+                    console.log('prices', prices);
+                    lot['Lot_Price'] = [...prices].filter(Number)
+                    console.log('prices', lot['Lot_Price']);
+                }
+            })
+
+            console.log('searchLotsData', searchLotsData);
+
+            searchLotsData
                 .filter(i => i.Lot_Polygon_Data !== "")
                 .filter(i => {
                     if (filters.room && filters.room.length > 0) {
+
+                        //---- add HOME DATA[start] -----------
+                        if (Array.isArray(i['Lot_Bedrooms'])) {
+                            const filtered = filters.room.filter(value => i['Lot_Bedrooms'].includes(value))
+                            return filtered;
+                        }
+                        //---- add HOME DATA[end] -----------
+
                         if (filters.room.includes(i['Lot_Bedrooms'])) {
                             return i
                         }
+
                     } else {
                         return i
                     }
                 })
                 .filter(i => {
                     if (filters.garage && filters.garage.length > 0) {
+
+                        //---- add HOME DATA[start] -----------
+                        if (Array.isArray(i['Lot_CarSpaces'])) {
+                            const filtered = filters.garage.filter(value => i['Lot_CarSpaces'].includes(value))
+                            return filtered;
+                        }
+                        //---- add HOME DATA[end] -----------
+
                         if (filters.garage.includes(i['Lot_CarSpaces'])) {
                             return i
                         }
@@ -1083,6 +1134,14 @@
                 })
                 .filter(i => {
                     if (filters.storey && filters.storey.length > 0) {
+
+                        //---- add HOME DATA[start] -----------
+                        if (Array.isArray(i['Lot_Storeys'])) {
+                            const filtered = filters.storey.filter(value => i['Lot_Storeys'].includes(value))
+                            return filtered;
+                        }
+                        //---- add HOME DATA[end] -----------
+
                         if (filters.storey.includes(i['Lot_Storeys'])) {
                             return i
                         }
@@ -1110,11 +1169,28 @@
                         return i
                     }
                 })
-                .filter(i => minMax("Lot_Home_Size", i))
-                .filter(i => minMax("Lot_Width", i))
-                .filter(i => minMax("Lot_Price", i))
-                .filter(i => minMax("Lot_Depth", i))
-                .filter(i => minMax("Lot_SQM", i))
+                .filter(i => {
+                    if (Array.isArray(i["Lot_Home_Size"])) {
+
+                        console.log('ARRAY!!!!!!!!!!!!!!!!', i);
+                        return i["Lot_Home_Size"].some(s => minMax("Lot_Home_Size", s))
+
+                    } else {
+                        return minMax("Lot_Home_Size", i['Lot_Home_Size'])
+                    }
+                })
+                .filter(i => minMax("Lot_Width", i['Lot_Width']))
+                .filter(i => {
+
+                    if (Array.isArray(i["Lot_Price"])) {
+                        return i["Lot_Price"].some(s => minMax("Lot_Price", s))
+                    } else {
+                        return minMax("Lot_Price", i['Lot_Price'])
+                    }
+
+                })
+                .filter(i => minMax("Lot_Depth", i['Lot_Depth']))
+                .filter(i => minMax("Lot_SQM", i['Lot_SQM']))
                 .map(i => {
 
                     const lot = JSON.parse(i.Lot_Polygon_Data);
@@ -1150,11 +1226,15 @@
         }
 
         function minMax(FILTER_PROP, i) {
+            console.log('=>', FILTER_PROP, i);
             if (filters && filters[FILTER_PROP] && filters[FILTER_PROP].max > 0) {
                 const { min, max } = filters[FILTER_PROP]
-                const lotValue = +i[FILTER_PROP]
+                const lotValue = +i
+                console.log(FILTER_PROP, ', min, max', lotValue, min, max);
                 if (lotValue >= +min && lotValue <= +max) {
                     return true
+                } else {
+                    return false
                 }
             } else {
                 return true
